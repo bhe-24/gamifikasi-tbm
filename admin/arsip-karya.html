@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arsip Karya</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; }
+        
+        .header { 
+            background: #FB8C00; color: white; padding: 15px 20px; 
+            display: flex; align-items: center; position: sticky; top:0; z-index:100; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .search-container { padding: 15px 20px; background: white; border-bottom: 1px solid #ddd; }
+        
+        .card-history { 
+            background: white; border-radius: 10px; padding: 15px; margin: 15px 20px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #ccc; 
+            transition: all 0.2s;
+        }
+
+        /* Status Colors */
+        .status-published { border-left-color: #28a745; } /* Terbit */
+        .status-rejected { border-left-color: #dc3545; }  /* Ditolak */
+        .status-revoked { border-left-color: #343a40; background: #e9ecef; opacity: 0.7; } /* Dicabut */
+        
+        .btn-revoke { 
+            font-size: 0.75rem; padding: 6px 12px; margin-top: 10px; border-radius: 20px;
+            border: 1px solid #dc3545; color: #dc3545; background: white;
+        }
+        .btn-revoke:hover { background: #dc3545; color: white; }
+
+        .content-preview {
+            background: #f8f9fa; padding: 10px; border-radius: 8px; 
+            font-size: 0.85rem; color: #555; max-height: 80px; overflow: hidden;
+            border: 1px dashed #ccc; margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <i class="fas fa-arrow-left me-3" onclick="history.back()" style="cursor:pointer; font-size:1.2rem;"></i>
+        <span style="font-weight:700; font-size:1.1rem;">Arsip Karya User</span>
+    </div>
+
+    <div class="search-container">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" id="searchBox" class="form-control border-start-0" placeholder="Cari judul atau penulis...">
+        </div>
+    </div>
+
+    <div id="archiveContainer">
+        <div class="text-center p-5 text-muted">
+            <i class="fas fa-spinner fa-spin"></i> Memuat arsip...
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, update, increment, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // CONFIG SERVER SINGAPURA
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
+            authDomain: "pkm-pm-def08.firebaseapp.com",
+            databaseURL: "https://pkm-pm-def08-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "pkm-pm-def08",
+            storageBucket: "pkm-pm-def08.firebasestorage.app",
+            messagingSenderId: "1077227616889",
+            appId: "1:1077227616889:web:9ce3a57e3d46012acab2a8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        let allWorks = [];
+
+        // LOAD SEMUA KARYA
+        onValue(ref(db, 'works'), (snap) => {
+            allWorks = [];
+            
+            if(!snap.exists()) {
+                document.getElementById('archiveContainer').innerHTML = '<div class="text-center p-5 text-muted">Belum ada karya masuk.</div>';
+                return;
+            }
+
+            snap.forEach(c => allWorks.push({key:c.key, ...c.val()}));
+            
+            // Urutkan Terbaru
+            allWorks.sort((a, b) => b.timestamp - a.timestamp);
+            
+            renderList(allWorks);
+        });
+
+        function renderList(list) {
+            const container = document.getElementById('archiveContainer');
+            container.innerHTML = '';
+
+            list.forEach(w => {
+                let statusBadge = '';
+                let actionBtn = '';
+                let borderClass = '';
+
+                // Logika Tampilan Berdasarkan Status
+                if(w.status === 'published') {
+                    statusBadge = '<span class="badge bg-success">Terbit</span>';
+                    borderClass = 'status-published';
+                    // Tombol Sanksi Hanya Muncul jika Status Terbit
+                    actionBtn = `
+                        <button class="btn-revoke" onclick="revokeWork('${w.key}', '${w.uid}')">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Cabut & Sanksi (-5 XP)
+                        </button>`;
+                } else if (w.status === 'rejected') {
+                    statusBadge = '<span class="badge bg-danger">Ditolak</span>';
+                    borderClass = 'status-rejected';
+                } else if (w.status === 'pending') {
+                    statusBadge = '<span class="badge bg-warning text-dark">Pending</span>';
+                } else if (w.status === 'revoked') {
+                    statusBadge = '<span class="badge bg-dark">DICABUT (PLAGIAT)</span>';
+                    borderClass = 'status-revoked';
+                    actionBtn = `<small class="text-danger font-italic d-block mt-2">Karya telah ditakedown.</small>`;
+                }
+
+                container.innerHTML += `
+                    <div class="card-history ${borderClass}">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <div class="fw-bold" style="font-size:0.95rem;">${w.title}</div>
+                                <small class="text-muted">Oleh: ${w.authorName}</small>
+                            </div>
+                            <span class="badge bg-light text-dark border h-100">${w.category}</span>
+                        </div>
+                        
+                        <div class="content-preview">${w.content}</div>
+                        
+                        <div class="d-flex justify-content-between align-items-end flex-wrap">
+                            <div class="mb-2">${statusBadge}</div>
+                            ${actionBtn}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // FITUR SEARCH
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            const key = e.target.value.toLowerCase();
+            const filtered = allWorks.filter(w => 
+                (w.title && w.title.toLowerCase().includes(key)) || 
+                (w.authorName && w.authorName.toLowerCase().includes(key))
+            );
+            renderList(filtered);
+        });
+
+        // LOGIKA CABUT KARYA (SANKSI -5 XP)
+        window.revokeWork = (workKey, userUid) => {
+            Swal.fire({
+                title: 'Cabut Karya Ini?',
+                text: "Karya akan hilang dari aplikasi dan Penulis didenda -5 XP (Indikasi Plagiat/Pelanggaran).",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Ya, Cabut!',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if(res.isConfirmed) {
+                    // 1. Ubah status jadi 'revoked' (Otomatis hilang dari Baca Online karena filter disana cuma 'published')
+                    update(ref(db, `works/${workKey}`), { status: 'revoked' });
+
+                    // 2. Kurangi XP User (-5)
+                    update(ref(db, `users/${userUid}`), { xp: increment(-5) });
+
+                    // 3. Catat Log Sanksi
+                    push(ref(db, `logs/${userUid}`), {
+                        activity: "SANKSI: Karya Dihapus (Pelanggaran)",
+                        points: -5,
+                        date: new Date().toLocaleDateString('id-ID')
+                    });
+
+                    Swal.fire('Selesai', 'Karya dicabut dan poin dikurangi.', 'success');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
