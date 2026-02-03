@@ -3,31 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Setting Banner</title>
+    <title>Pengaturan Tampilan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #E0F7FA; padding-bottom: 50px; }
-        .admin-header { background: #0097A7; color: white; padding: 15px 20px; display: flex; align-items: center; gap: 15px; }
-        .card-box { background: white; margin: 20px; padding: 20px; border-radius: 15px; text-align: center; }
-        img.preview { width: 100%; height: 150px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; border: 2px dashed #ccc; }
+        .admin-header { background: #0097A7; color: white; padding: 15px 20px; display: flex; align-items: center; gap: 15px; position: sticky; top:0; z-index:100; }
+        .card-box { background: white; margin: 20px; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .section-title { font-weight: 700; color: #006064; margin-bottom: 10px; text-align: left; border-bottom: 2px solid #B2EBF2; padding-bottom: 5px;}
+        
+        img.preview-banner { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; border: 2px dashed #ccc; background: #eee; }
+        img.preview-logo { width: 80px; height: 80px; object-fit: contain; border-radius: 50%; margin-bottom: 10px; border: 2px dashed #ccc; background: #eee; padding: 5px;}
     </style>
 </head>
 <body>
     <div class="admin-header">
         <i class="fas fa-arrow-left" onclick="window.location.href='index.html'" style="cursor:pointer; font-size:1.2rem;"></i>
-        <span style="font-weight:700; font-size:1.1rem;">Pengaturan Banner</span>
+        <span style="font-weight:700; font-size:1.1rem;">Setting Tampilan</span>
     </div>
 
     <div class="card-box">
-        <h6 class="mb-3">Banner Dashboard Saat Ini</h6>
-        <img id="previewBanner" src="" class="preview" onerror="this.src='https://placehold.co/600x200?text=Kosong'">
+        <div class="section-title"><i class="fas fa-icons me-2"></i>Logo Aplikasi</div>
+        <p class="small text-muted text-start">Logo ini muncul di Halaman Login, Dashboard, dan Header.</p>
+        <img id="imgLogo" src="" class="preview-logo" onerror="this.src='https://placehold.co/100?text=Logo'">
         
-        <input type="file" id="fileBanner" class="form-control mb-3" accept="image/*">
-        <button class="btn btn-info w-100 text-white" onclick="uploadBanner()">
-            <i class="fas fa-cloud-upload-alt"></i> Upload Banner Baru
+        <input type="file" id="fileLogo" class="form-control mb-2" accept="image/*">
+        <button class="btn btn-primary w-100 btn-sm" onclick="uploadImage('fileLogo', 'logoUrl')">
+            Update Logo
+        </button>
+    </div>
+
+    <div class="card-box">
+        <div class="section-title"><i class="fas fa-home me-2"></i>Banner Dashboard</div>
+        <p class="small text-muted text-start">Muncul di halaman utama (Home) user.</p>
+        <img id="imgDash" src="" class="preview-banner" onerror="this.src='https://placehold.co/600x200?text=Banner+Home'">
+        
+        <input type="file" id="fileDash" class="form-control mb-2" accept="image/*">
+        <button class="btn btn-info w-100 text-white btn-sm" onclick="uploadImage('fileDash', 'bannerUrl')">
+            Update Banner Home
+        </button>
+    </div>
+
+    <div class="card-box">
+        <div class="section-title"><i class="fas fa-book-open me-2"></i>Banner Baca Online</div>
+        <p class="small text-muted text-start">Muncul di halaman katalog buku.</p>
+        <img id="imgBaca" src="" class="preview-banner" onerror="this.src='https://placehold.co/600x200?text=Banner+Baca'">
+        
+        <input type="file" id="fileBaca" class="form-control mb-2" accept="image/*">
+        <button class="btn btn-warning w-100 text-white btn-sm" onclick="uploadImage('fileBaca', 'bannerBacaUrl')">
+            Update Banner Baca
         </button>
     </div>
 
@@ -35,6 +61,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // CONFIG FIREBASE (SINGAPURA)
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -49,25 +76,48 @@
         const db = getDatabase(app);
         const IMGBB_API_KEY = "2f45fcafb6dfb2dbae295499022ce476";
 
-        onValue(ref(db, 'settings/bannerUrl'), (snap) => {
-            if(snap.val()) document.getElementById('previewBanner').src = snap.val();
+        // LOAD CURRENT IMAGES
+        onValue(ref(db, 'settings'), (snap) => {
+            const d = snap.val();
+            if(d) {
+                if(d.logoUrl) document.getElementById('imgLogo').src = d.logoUrl;
+                if(d.bannerUrl) document.getElementById('imgDash').src = d.bannerUrl;
+                if(d.bannerBacaUrl) document.getElementById('imgBaca').src = d.bannerBacaUrl;
+            }
         });
 
-        window.uploadBanner = async () => {
-            const file = document.getElementById('fileBanner').files[0];
+        // REUSABLE UPLOAD FUNCTION
+        window.uploadImage = async (inputId, dbField) => {
+            const file = document.getElementById(inputId).files[0];
             if(!file) return Swal.fire('Error', 'Pilih gambar dulu!', 'error');
 
             Swal.fire({ title: 'Uploading...', didOpen: () => Swal.showLoading() });
-            const formData = new FormData(); formData.append('image', file);
+            
+            const formData = new FormData(); 
+            formData.append('image', file);
 
             try {
+                // Upload ke ImgBB
                 const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:'POST', body:formData });
                 const json = await res.json();
+                
                 if(json.success) {
-                    await update(ref(db, 'settings'), { bannerUrl: json.data.url });
-                    Swal.fire('Sukses', 'Banner diperbarui!', 'success');
+                    const url = json.data.url;
+                    
+                    // Simpan URL ke Firebase
+                    const updateData = {};
+                    updateData[dbField] = url; // Dynamic Key
+                    
+                    await update(ref(db, 'settings'), updateData);
+                    
+                    Swal.fire('Sukses', 'Gambar berhasil diperbarui!', 'success');
+                } else {
+                    throw new Error('Gagal upload ke ImgBB');
                 }
-            } catch(e) { Swal.fire('Error', 'Gagal upload', 'error'); }
+            } catch(e) { 
+                console.error(e);
+                Swal.fire('Error', 'Gagal upload', 'error'); 
+            }
         };
     </script>
 </body>
