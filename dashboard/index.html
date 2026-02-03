@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* CSS CUSTOM - TEMA BIRU FRESH (Sesuai kode kamu) */
+        /* CSS CUSTOM - TEMA BIRU FRESH */
         :root {
             --primary-blue: #1565C0;
             --light-blue-bg: #E3F2FD;
@@ -71,11 +71,19 @@
         .user-lb-name { font-size: 0.9rem; font-weight: 600; color: #444; }
         .user-lb-points { font-size: 0.8rem; color: var(--primary-blue); font-weight: 700; }
 
-        /* POSISI USER */
+        /* POSISI USER (INI YANG KITA PERBAIKI) */
         .my-rank-bar {
-            background: var(--primary-blue); color: white; margin: 0 15px 25px 15px; padding: 12px 20px;
+            background: var(--primary-blue); color: white; 
+            margin: 0 15px 25px 15px; padding: 15px 20px;
             border-radius: 15px; display: flex; align-items: center; justify-content: space-between;
             box-shadow: 0 5px 15px rgba(21, 101, 192, 0.3);
+            position: relative; overflow: hidden;
+        }
+        /* Efek hiasan background */
+        .my-rank-bar::after {
+            content: ""; position: absolute; right: -20px; bottom: -20px;
+            width: 80px; height: 80px; background: rgba(255,255,255,0.1);
+            border-radius: 50%; pointer-events: none;
         }
 
         /* MENU GRID */
@@ -120,13 +128,18 @@
 
     <div class="my-rank-bar">
         <div class="d-flex align-items-center">
-            <img src="https://i.ibb.co/5r2M63R/person-placeholder.png" class="profile-thumb" id="myRankPic" style="width:38px; height:38px; border:none; margin-right:10px;">
+            <div id="myRankBadge" style="background:white; color:#1565C0; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.2rem; margin-right:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+                -
+            </div>
             <div>
-                <span style="font-size: 0.75rem; display:block; opacity:0.9;">Peringkat kamu:</span>
-                <span style="font-weight:bold; font-size:0.95rem;" id="myRankName">Memuat...</span>
+                <span style="font-size: 0.75rem; display:block; opacity:0.8;">Peringkat Kamu</span>
+                <span style="font-weight:bold; font-size:1rem;" id="myRankName">Memuat...</span>
             </div>
         </div>
-        <div style="font-size: 1.1rem; font-weight:bold;" id="myRankPoints">0 XP</div>
+        <div style="text-align:right;">
+             <div style="font-size: 1.2rem; font-weight:bold;" id="myRankPoints">0 XP</div>
+             <span style="font-size: 0.7rem; opacity:0.8;">Total Poin</span>
+        </div>
     </div>
 
     <div class="menu-grid">
@@ -170,7 +183,7 @@
             if (user) {
                 // User login, ambil data
                 loadUserProfile(user);
-                loadLeaderboard(user.uid);
+                loadLeaderboardAndRank(user.uid); // <--- LOGIKA GABUNGAN
                 loadUserHistory(user.uid);
                 loadSettings(); 
             } else {
@@ -184,42 +197,31 @@
             onValue(settingsRef, (snap) => {
                 const data = snap.val();
                 if(data) {
-                    // Update Banner
-                    if(data.bannerUrl) {
-                        document.getElementById('dynamicBanner').src = data.bannerUrl;
-                    }
-                    // Update Logo Header
-                    if(data.logoUrl) {
-                        document.getElementById('headerLogo').src = data.logoUrl;
-                    }
+                    if(data.bannerUrl) document.getElementById('dynamicBanner').src = data.bannerUrl;
+                    if(data.logoUrl) document.getElementById('headerLogo').src = data.logoUrl;
                 }
             });
         }
 
-        // 3. LOAD PROFIL (Nama & Poin)
+        // 3. LOAD PROFIL (Nama & Foto)
         function loadUserProfile(user) {
             const userRef = ref(db, 'users/' + user.uid);
             onValue(userRef, (snapshot) => {
-                let name = user.displayName || "Pengguna Baru";
-                let xp = 0;
                 let pic = "https://i.ibb.co/5r2M63R/person-placeholder.png";
+                let name = "User";
 
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    name = data.username || data.fullName || name;
-                    xp = data.xp || 0;
                     pic = data.profilePic || pic;
+                    name = data.username || data.fullName || name;
                 }
-
-                document.getElementById('myRankName').innerText = name;
-                document.getElementById('myRankPoints').innerText = xp + " XP";
                 document.getElementById('userProfilePic').src = pic;
-                document.getElementById('myRankPic').src = pic;
+                document.getElementById('myRankName').innerText = name; // Update nama di bar biru
             });
         }
 
-        // 4. LOAD LEADERBOARD
-        function loadLeaderboard(currentUid) {
+        // 4. LOAD LEADERBOARD & HITUNG PERINGKAT SAYA
+        function loadLeaderboardAndRank(currentUid) {
             const container = document.getElementById('topThreeContainer');
             const usersRef = ref(db, 'users');
 
@@ -235,14 +237,17 @@
                 snapshot.forEach((child) => {
                     const u = child.val();
                     users.push({
+                        uid: child.key, // Simpan UID untuk pencarian
                         username: u.username || u.fullName || "User",
                         xp: u.xp || 0,
                         pic: u.profilePic || "https://i.ibb.co/5r2M63R/person-placeholder.png"
                     });
                 });
 
+                // Urutkan dari XP Terbesar
                 users.sort((a, b) => b.xp - a.xp);
 
+                // A. TAMPILKAN TOP 3
                 users.slice(0, 3).forEach((u, i) => {
                     const rankClass = i === 0 ? 'rank-1' : (i === 1 ? 'rank-2' : 'rank-3');
                     const crown = i === 0 ? '<i class="fas fa-crown text-warning ms-auto"></i>' : '';
@@ -260,10 +265,26 @@
                     `;
                     container.innerHTML += html;
                 });
+
+                // B. HITUNG POSISI SAYA (PERINGKAT BERAPA?)
+                let myRank = "-";
+                let myXP = 0;
+                
+                // Cari user saya ada di index berapa
+                const myIndex = users.findIndex(u => u.uid === currentUid);
+                
+                if(myIndex !== -1) {
+                    myRank = myIndex + 1; // Karena index mulai dari 0
+                    myXP = users[myIndex].xp;
+                }
+
+                // Update Tampilan Bar Biru
+                document.getElementById('myRankBadge').innerText = "#" + myRank;
+                document.getElementById('myRankPoints').innerText = myXP + " XP";
             });
         }
 
-        // 5. LOAD HISTORY (RIWAYAT AKTIVITAS)
+        // 5. LOAD HISTORY (RIWAYAT)
         function loadUserHistory(uid) {
             const logsRef = ref(db, `logs/${uid}`);
             const logsQuery = query(logsRef, limitToLast(5));
@@ -277,11 +298,10 @@
                 
                 const logs = [];
                 snapshot.forEach(c => logs.push(c.val()));
-                logs.reverse(); // Urutkan dari yang terbaru
+                logs.reverse(); 
 
                 container.innerHTML = '';
                 logs.forEach(log => {
-                    // Warna Poin: Hijau (Plus), Merah (Minus), Abu (0)
                     let pointColor = '#888';
                     let pointSign = '';
                     if(log.points > 0) { pointColor = '#4CAF50'; pointSign = '+'; }
