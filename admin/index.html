@@ -1,11 +1,177 @@
-<script type="module">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Hub - TBM Digital</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --admin-primary: #0D47A1; /* Biru Tua */
+            --admin-light: #E3F2FD;
+            --admin-card: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--admin-light);
+            padding-bottom: 50px;
+            margin: 0;
+        }
+
+        /* HEADER */
+        .admin-header {
+            background: linear-gradient(135deg, #0D47A1, #1565C0);
+            padding: 20px;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(13, 71, 161, 0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        .header-title { font-weight: 700; font-size: 1.2rem; margin-top: 10px; }
+        .header-subtitle { font-size: 0.8rem; opacity: 0.8; }
+        
+        .btn-logout {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255,255,255,0.2); border: none;
+            color: white; width: 35px; height: 35px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+
+        /* STATS CARD (RINGKASAN) */
+        .stats-container {
+            display: flex; gap: 15px; margin: -25px 20px 20px 20px;
+        }
+        .stat-card {
+            flex: 1; background: white; padding: 15px; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center;
+        }
+        .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--admin-primary); }
+        .stat-label { font-size: 0.7rem; color: #666; }
+
+        /* MENU GRID ADMIN */
+        .admin-menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2 Kolom biar besar di HP */
+            gap: 15px;
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .admin-menu-item {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-decoration: none;
+            color: #444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            aspect-ratio: 1/1; /* Kotak Persegi */
+        }
+
+        .admin-menu-item:active { transform: scale(0.96); }
+
+        .menu-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--admin-primary);
+        }
+
+        .menu-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* LABEL PENDING (MERAH KECIL) */
+        .badge-pending {
+            background: #D32F2F; color: white;
+            font-size: 0.6rem; padding: 2px 6px; border-radius: 10px;
+            margin-top: 5px; display: none; /* Default hidden */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="admin-header">
+        <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" style="width:50px; background:white; border-radius:50%; padding:3px;">
+        <div class="header-title">Admin Panel</div>
+        <div class="header-subtitle">Kelola TBM Digital</div>
+    </div>
+
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-num" id="countUsers">-</div>
+            <div class="stat-label">Total User</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" id="countReports">-</div>
+            <div class="stat-label">Laporan Baru</div>
+        </div>
+    </div>
+
+    <div class="admin-menu-grid">
+        <a href="kelola-buku.html" class="admin-menu-item">
+            <i class="fas fa-book menu-icon"></i>
+            <span class="menu-label">Kelola<br>Buku</span>
+        </a>
+
+        <a href="laporan.html" class="admin-menu-item">
+            <i class="fas fa-clipboard-check menu-icon" style="color:#43A047;"></i>
+            <span class="menu-label">Cek<br>Laporan</span>
+            <span class="badge-pending" id="badgeLaporan">Baru!</span>
+        </a>
+
+        <a href="karya.html" class="admin-menu-item">
+            <i class="fas fa-pen-fancy menu-icon" style="color:#FB8C00;"></i>
+            <span class="menu-label">Karya<br>Masuk</span>
+            <span class="badge-pending" id="badgeKarya">Baru!</span>
+        </a>
+
+        <a href="hadiah.html" class="admin-menu-item">
+            <i class="fas fa-gift menu-icon" style="color:#E91E63;"></i>
+            <span class="menu-label">Request<br>Hadiah</span>
+            <span class="badge-pending" id="badgeHadiah">Baru!</span>
+        </a>
+
+        <a href="banner.html" class="admin-menu-item">
+            <i class="fas fa-image menu-icon" style="color:#0097A7;"></i>
+            <span class="menu-label">Ganti<br>Banner</span>
+        </a>
+
+        <a href="leaderboard.html" class="admin-menu-item">
+            <i class="fas fa-trophy menu-icon" style="color:#FBC02D;"></i>
+            <span class="menu-label">Pantau<br>Klasemen</span>
+        </a>
+    </div>
+
+    <div class="text-center text-muted" style="font-size:0.7rem;">&copy; 2026 TBM Admin System</div>
+
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // CONFIG SERVER SINGAPURA (FIX)
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
+            databaseURL: "https://pkm-pm-def08-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "pkm-pm-def08",
             storageBucket: "pkm-pm-def08.firebasestorage.app",
             messagingSenderId: "1077227616889",
@@ -15,242 +181,75 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
-        const IMGBB_API_KEY = "2f45fcafb6dfb2dbae295499022ce476";
 
-        // 1. CEK LOGIN ADMIN
+        // 1. CEK AUTH (Security)
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Cek domain, jika bukan admin tendang
                 if (!user.email.endsWith('@ac.id')) {
-                    Swal.fire('Akses Ditolak', 'Halaman ini khusus Admin.', 'error').then(() => {
-                        window.location.href = "../dashboard/index.html";
-                    });
+                    alert('Akses khusus Admin!');
+                    window.location.href = "../dashboard/index.html";
                 } else {
-                    loadLeaderboard();
-                    loadCurrentBanner();
-                    loadReports(); 
+                    loadStats();
                 }
             } else {
                 window.location.href = "../index.html";
             }
         });
 
-        // 2. NAVIGASI TAB
-        window.switchTab = (tabId) => {
-            document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            
-            // Highlight tombol yang diklik
-            const btns = document.querySelectorAll('.nav-btn');
-            btns.forEach(btn => {
-                if(btn.innerText.toLowerCase().includes(tabId)) btn.classList.add('active');
-                // Fallback logic simpel
-                if(tabId === 'leaderboard' && btn.innerText.includes('Leaderboard')) btn.classList.add('active');
-                if(tabId === 'banner' && btn.innerText.includes('Banner')) btn.classList.add('active');
-                if(tabId === 'laporan' && btn.innerText.includes('Laporan')) btn.classList.add('active');
-                if(tabId === 'karya' && btn.innerText.includes('Karya')) btn.classList.add('active');
-                if(tabId === 'hadiah' && btn.innerText.includes('Tukar')) btn.classList.add('active');
+        // 2. HITUNG DATA (Realtime Counter)
+        function loadStats() {
+            // Hitung User
+            onValue(ref(db, 'users'), (snap) => {
+                document.getElementById('countUsers').innerText = snap.size || 0;
             });
-        };
 
-        // 3. LOGIC LEADERBOARD (DIPERBAIKI)
-        function loadLeaderboard() {
-            const container = document.getElementById('leaderboardList');
-            const usersRef = ref(db, 'users');
-            
-            // Listener Realtime
-            onValue(usersRef, (snapshot) => {
-                // Bersihkan "Memuat..."
-                container.innerHTML = '';
-
-                if (!snapshot.exists()) {
-                    container.innerHTML = `
-                        <div class="text-center p-4 text-muted">
-                            <i class="fas fa-users-slash fa-2x mb-2"></i><br>
-                            Belum ada user yang bergabung.
-                        </div>`;
-                    return;
-                }
-                
-                let users = [];
-                snapshot.forEach(c => {
-                    // Pastikan data valid
-                    const val = c.val();
-                    users.push({
-                        uid: c.key,
-                        username: val.username || val.fullName || "Tanpa Nama", // Fallback nama
-                        profilePic: val.profilePic || 'https://i.ibb.co/5r2M63R/person-placeholder.png',
-                        level: val.level || 1,
-                        xp: val.xp || 0
-                    });
+            // Hitung Laporan Pending
+            onValue(ref(db, 'reports'), (snap) => {
+                let pendingCount = 0;
+                snap.forEach(c => {
+                    if(c.val().status === 'pending') pendingCount++;
                 });
+                document.getElementById('countReports').innerText = pendingCount;
                 
-                // Urutkan XP Tertinggi -> Terendah
-                users.sort((a,b) => b.xp - a.xp);
-
-                if (users.length === 0) {
-                    container.innerHTML = '<div class="text-center text-muted">Data user kosong.</div>';
-                    return;
-                }
-
-                // Render HTML
-                users.forEach((u, index) => {
-                    const rankColor = index === 0 ? '#FFD700' : (index === 1 ? '#C0C0C0' : (index === 2 ? '#CD7F32' : '#0D47A1'));
-                    const isTop = index < 3;
-                    
-                    const html = `
-                        <div class="lb-row" style="${isTop ? 'background:#f8faff;' : ''}">
-                            <div class="lb-rank" style="color:${rankColor}; font-size:${isTop ? '1.2rem' : '1rem'}">
-                                ${index === 0 ? '<i class="fas fa-crown"></i>' : '#' + (index+1)}
-                            </div>
-                            <img src="${u.profilePic}" class="lb-img" style="${isTop ? 'border:2px solid ' + rankColor : ''}">
-                            <div class="lb-name">
-                                <strong>${u.username}</strong>
-                                <span class="badge bg-light text-dark border ms-1" style="font-size:0.7rem">Lvl ${u.level}</span>
-                            </div>
-                            <div class="lb-xp text-success">
-                                ${u.xp} <span style="font-size:0.7rem; color:#888;">XP</span>
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML += html;
-                });
-
-            }, (error) => {
-                // Jika Error Koneksi / Permission
-                console.error(error);
-                container.innerHTML = `<div class="text-center text-danger p-3">Gagal memuat data: ${error.message}</div>`;
-            });
-        }
-
-        // 4. LOGIC UPLOAD BANNER
-        function loadCurrentBanner() {
-            onValue(ref(db, 'settings/bannerUrl'), (snap) => {
-                if(snap.val()) document.getElementById('previewBanner').src = snap.val();
-            });
-        }
-
-        window.uploadBanner = () => {
-            const fileInput = document.getElementById('fileBanner');
-            if (fileInput.files.length === 0) {
-                Swal.fire('Error', 'Pilih gambar dulu!', 'error');
-                return;
-            }
-
-            const file = fileInput.files[0];
-            const formData = new FormData();
-            formData.append('image', file);
-
-            Swal.fire({
-                title: 'Mengupload...',
-                text: 'Mohon tunggu sebentar',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
-
-            fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    const imageUrl = result.data.url;
-                    update(ref(db, 'settings'), { bannerUrl: imageUrl })
-                    .then(() => {
-                        Swal.fire('Sukses!', 'Banner berhasil diperbarui.', 'success');
-                    });
+                // Show Badge jika ada yang pending
+                if(pendingCount > 0) {
+                    document.getElementById('badgeLaporan').style.display = 'inline-block';
+                    document.getElementById('badgeLaporan').innerText = pendingCount + ' Baru';
                 } else {
-                    throw new Error('Gagal upload ke ImgBB');
+                    document.getElementById('badgeLaporan').style.display = 'none';
                 }
-            })
-            .catch(error => {
-                Swal.fire('Gagal', error.message, 'error');
             });
-        }
 
-        // 5. LOGIC LAPORAN (Placeholder)
-        function loadReports() {
-            const reportsRef = ref(db, 'reports');
-            onValue(reportsRef, (snap) => {
-                const container = document.getElementById('laporanList');
-                container.innerHTML = '';
-                
-                if(!snap.exists()) {
-                    container.innerHTML = '<div class="text-center text-muted p-4">Belum ada laporan pending.</div>';
-                    return;
+            // Cek Karya Pending (Untuk Badge)
+            onValue(ref(db, 'works'), (snap) => {
+                let pending = 0;
+                snap.forEach(c => { if(c.val().status === 'pending') pending++; });
+                if(pending > 0) {
+                    document.getElementById('badgeKarya').style.display = 'inline-block';
                 }
-
-                let hasPending = false;
-                snap.forEach(child => {
-                    const data = child.val();
-                    const key = child.key;
-
-                    if(data.status === 'pending') {
-                        hasPending = true;
-                        const html = `
-                            <div class="admin-card item-list pending">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <strong style="color:var(--admin-blue)">${data.userName}</strong>
-                                    <small class="text-muted">${data.date || '-'}</small>
-                                </div>
-                                <div style="font-size:0.9rem; margin-bottom:5px;">
-                                    <i class="fas fa-book me-1"></i> ${data.bookTitle}
-                                </div>
-                                <div class="p-2 bg-light rounded small mb-2 text-secondary font-italic">"${data.summary}"</div>
-                                
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-success btn-sm flex-fill" onclick="approveReport('${key}', '${data.uid}', 50)">
-                                        <i class="fas fa-check"></i> Terima (+50 XP)
-                                    </button>
-                                    <button class="btn btn-danger btn-sm flex-fill" onclick="rejectReport('${key}')">
-                                        <i class="fas fa-times"></i> Tolak
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                        container.innerHTML += html;
-                    }
-                });
-
-                if(!hasPending) container.innerHTML = '<div class="text-center text-muted p-4">Semua laporan sudah diperiksa.</div>';
-            });
-        }
-
-        window.approveReport = (reportKey, userUid, points) => {
-            update(ref(db, `reports/${reportKey}`), { status: 'approved' });
-            
-            // Ambil XP lama dulu baru tambah (Transaction manual sederhana)
-            // Note: Idealnya pakai runTransaction, tapi ini cukup untuk prototype
-            const userRef = ref(db, `users/${userUid}`);
-            // Kita update log history juga
-            const newLogRef = push(ref(db, `logs/${userUid}`));
-            
-            // (Disini kita update XP blind increment via update client side - Hati hati race condition di production)
-            // Tapi untuk PKM ini oke.
-            // Kita perlu fetch user dulu untuk tau XP terakhir kalau mau nambah, 
-            // ATAU pakai increment() atomic firebase (lebih aman)
-            import { increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-            
-            update(userRef, { xp: increment(points) });
-            
-            // Catat Log
-            update(newLogRef, {
-                activity: "Laporan Buku Diterima",
-                points: points,
-                date: new Date().toLocaleDateString('id-ID')
             });
 
-            Swal.fire('Berhasil', 'Poin ditambahkan & Laporan diterima.', 'success');
-        };
-
-        window.rejectReport = (key) => {
-            update(ref(db, `reports/${key}`), { status: 'rejected' });
-            Swal.fire('Ditolak', 'Laporan ditandai ditolak', 'info');
+            // Cek Hadiah Pending
+            onValue(ref(db, 'redemptions'), (snap) => {
+                let pending = 0;
+                snap.forEach(c => { if(c.val().status === 'pending') pending++; });
+                if(pending > 0) {
+                    document.getElementById('badgeHadiah').style.display = 'inline-block';
+                }
+            });
         }
 
         window.logout = () => {
-            signOut(auth).then(() => window.location.href="../index.html");
+            Swal.fire({
+                title: 'Keluar Admin?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0D47A1',
+                confirmButtonText: 'Ya'
+            }).then(res => {
+                if(res.isConfirmed) signOut(auth).then(() => window.location.href="../index.html");
+            });
         }
     </script>
+</body>
+</html>
