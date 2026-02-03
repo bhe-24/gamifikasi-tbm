@@ -3,98 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login TBM Digital</title>
-    
+    <title>Masuk - TBM Digital</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* 1. VISUAL: Polkadot Biru Tua (Sesuai Permintaan) */
+        :root {
+            --bg-color: #0D47A1; /* Biru Tua */
+            --dot-color: rgba(255, 255, 255, 0.05); /* Titik putih tipis */
+            --primary-btn: #1565C0;
+        }
+
         body {
-            background-color: #f5f5f5;
             font-family: 'Poppins', sans-serif;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
+            margin: 0; padding: 0;
+            height: 100vh; width: 100vw;
+            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            background-color: var(--bg-color);
+            position: relative;
         }
 
-        .card-login {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 380px;
-            text-align: center;
+        /* Animasi Background Polkadot Halus */
+        .animated-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+            background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
 
-        .logo-img {
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
-            margin-bottom: 15px;
-            /* Placeholder style biar rapi kalau gambar belum loading */
-            background: #fff; 
-            border-radius: 50%;
+        /* Container Kartu (Stabil) */
+        .login-card {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 20px; padding: 25px;
+            width: 85%; max-width: 350px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            text-align: center; z-index: 10; position: relative;
         }
 
+        /* Logo */
+        .app-logo {
+            width: 65px; height: 65px; object-fit: contain; margin-bottom: 10px;
+            border-radius: 50%; background: white; padding: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .app-title {
+            font-weight: 700; color: #333; font-size: 1.1rem;
+            margin-bottom: 20px; line-height: 1.2;
+        }
+
+        h5.section-title {
+            font-size: 0.85rem; color: #666; margin-bottom: 15px;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* Form Input */
+        .input-group-custom { position: relative; margin-bottom: 12px; }
         .form-control {
-            border-radius: 8px;
-            padding: 10px 15px;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
+            border-radius: 10px; padding: 12px 15px; font-size: 0.9rem;
+            border: 1px solid #ddd; background: #F9F9F9; width: 100%;
+        }
+        .form-control:focus {
+            border-color: var(--primary-btn); background: white;
+            box-shadow: none; outline: none;
         }
 
-        .btn-primary-custom {
-            background-color: #1565C0;
-            border: none;
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            margin-bottom: 10px;
+        /* Ikon Show/Hide Password */
+        .password-toggle {
+            position: absolute; right: 15px; top: 50%;
+            transform: translateY(-50%); cursor: pointer;
+            color: #aaa; z-index: 5; padding: 5px;
         }
+        .password-toggle:hover { color: var(--primary-btn); }
+        input[type="password"], input.password-field { padding-right: 45px; }
 
-        .btn-outline-custom {
-            background-color: transparent;
-            border: 1px solid #1565C0;
-            color: #1565C0;
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: 600;
+        /* Tombol */
+        .btn-custom {
+            width: 100%; padding: 12px; border-radius: 10px;
+            font-weight: 600; font-size: 0.9rem; border: none; margin-top: 5px;
+            background: linear-gradient(135deg, #1565C0, #0D47A1); color: white;
+            box-shadow: 0 4px 15px rgba(21, 101, 192, 0.3); transition: transform 0.2s;
+        }
+        .btn-custom:active { transform: scale(0.98); }
+
+        .toggle-text { margin-top: 15px; font-size: 0.8rem; color: #666; }
+        .toggle-link { color: var(--primary-btn); cursor: pointer; font-weight: 700; text-decoration: none; }
+        .d-none-custom { display: none; }
+
+        .footer-mini {
+            position: absolute; bottom: 15px; width: 100%; text-align: center;
+            font-size: 0.7rem; color: rgba(255,255,255,0.5); z-index: 10;
         }
     </style>
 </head>
 <body>
 
-    <div class="card-login">
-        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" id="logoApp" class="logo-img">
-        
-        <h4 style="font-weight: 700; margin-bottom: 5px;">Selamat Datang</h4>
-        <p class="text-muted small mb-4">Silakan masuk ke akun kamu</p>
+    <div class="animated-bg"></div>
 
-        <form id="loginForm">
-            <input type="email" id="email" class="form-control" placeholder="Email" required>
-            <input type="password" id="password" class="form-control" placeholder="Kata Sandi" required>
-            
-            <button type="submit" class="btn-primary-custom">MASUK</button>
-            <button type="button" class="btn-outline-custom" onclick="registerPopup()">DAFTAR AKUN</button>
-        </form>
-        
-        <div class="mt-3 text-muted small">
-            <a href="privacy.html" style="text-decoration: none; color: #888;">Kebijakan Privasi</a>
+    <div class="login-card">
+        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" alt="Logo" class="app-logo" id="dynamicLogo">
+        <h2 class="app-title">Taman Bacaan<br>Masyarakat</h2>
+
+        <div id="loginSection">
+            <h5 class="section-title">Masuk Akun</h5>
+            <form id="loginForm">
+                <div class="input-group-custom">
+                    <input type="email" id="loginEmail" class="form-control" placeholder="Email" required>
+                </div>
+                
+                <div class="input-group-custom">
+                    <input type="password" id="loginPassword" class="form-control password-field" placeholder="Password" required>
+                    <i class="fas fa-eye password-toggle" onclick="togglePass('loginPassword', this)"></i>
+                </div>
+                
+                <div class="text-end mb-3">
+                    <small><a href="#" class="text-secondary text-decoration-none" onclick="showForgot()" style="font-size: 0.75rem;">Lupa Password?</a></small>
+                </div>
+
+                <button type="submit" class="btn btn-custom">MASUK</button>
+            </form>
+            <div class="toggle-text">
+                Belum punya akun? <span class="toggle-link" onclick="showRegister()">Daftar</span>
+            </div>
+        </div>
+
+        <div id="registerSection" class="d-none-custom">
+            <h5 class="section-title">Buat Akun</h5>
+            <form id="registerForm">
+                <div class="input-group-custom">
+                    <input type="text" id="regName" class="form-control" placeholder="Nama Lengkap" required>
+                </div>
+                <div class="input-group-custom">
+                    <input type="number" id="regAge" class="form-control" placeholder="Umur" required>
+                </div>
+                <div class="input-group-custom">
+                    <input type="email" id="regEmail" class="form-control" placeholder="Email" required>
+                </div>
+                <div class="input-group-custom">
+                    <input type="password" id="regPassword" class="form-control password-field" placeholder="Password (Min. 6)" required>
+                    <i class="fas fa-eye password-toggle" onclick="togglePass('regPassword', this)"></i>
+                </div>
+
+                <button type="submit" class="btn btn-custom">DAFTAR</button>
+            </form>
+            <div class="toggle-text">
+                Sudah punya akun? <span class="toggle-link" onclick="showLogin()">Masuk</span>
+            </div>
+        </div>
+
+        <div id="forgotSection" class="d-none-custom">
+            <h5 class="section-title">Reset Password</h5>
+            <form id="forgotForm">
+                <div class="input-group-custom">
+                    <input type="email" id="forgotEmail" class="form-control" placeholder="Email Terdaftar" required>
+                </div>
+                <button type="submit" class="btn btn-custom">KIRIM LINK</button>
+            </form>
+            <div class="toggle-text">
+                <span class="toggle-link" onclick="showLogin()">Batal</span>
+            </div>
         </div>
     </div>
 
+    <div class="footer-mini">&copy; 2026 TBM Digital Indonesia</div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        // TAMBAHKAN 'onValue' DI SINI
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         // CONFIG SERVER SINGAPURA
         const firebaseConfig = {
@@ -111,85 +192,111 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- 1. LOGIKA GANTI LOGO OTOMATIS (Satu-satunya tambahan) ---
-        onValue(ref(db, 'settings'), (snap) => {
-            const d = snap.val();
-            // Hanya ganti jika di database ada link logo
-            if(d && d.logoUrl) {
-                document.getElementById('logoApp').src = d.logoUrl;
+        // --- 1. FITUR LOGO DINAMIS (INI YANG KAMU MINTA) ---
+        // Kode ini akan membaca database 'settings' dan mengganti gambar logo
+        const settingsRef = ref(db, 'settings');
+        onValue(settingsRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.logoUrl) {
+                // Ganti sumber gambar (src) dengan URL dari database
+                document.getElementById('dynamicLogo').src = data.logoUrl;
             }
         });
-        // ------------------------------------------------------------
+        // ---------------------------------------------------
 
-        // LOGIN
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-
-            Swal.fire({title: 'Memuat...', didOpen: ()=>Swal.showLoading()});
-
-            signInWithEmailAndPassword(auth, email, pass)
-                .then((cred) => {
-                    const emailUser = cred.user.email;
-                    if(emailUser.endsWith('@ac.id')) {
-                        window.location.href = "admin/index.html";
-                    } else {
-                        window.location.href = "dashboard/index.html";
-                    }
-                })
-                .catch((err) => {
-                    Swal.fire('Gagal', 'Email atau password salah.', 'error');
-                });
+        // TOAST CONFIG
+        const Toast = Swal.mixin({
+            toast: true, position: 'top', showConfirmButton: false, timer: 3000, timerProgressBar: true,
+            didOpen: (toast) => { toast.addEventListener('mouseenter', Swal.stopTimer); toast.addEventListener('mouseleave', Swal.resumeTimer); }
         });
 
-        // REGISTER (POPUP STANDAR)
-        window.registerPopup = async () => {
-            const { value: formValues } = await Swal.fire({
-                title: 'Daftar Akun',
-                html:
-                    '<input id="swal-name" class="swal2-input" placeholder="Nama Lengkap">' +
-                    '<input id="swal-email" class="swal2-input" placeholder="Email">' +
-                    '<input id="swal-pass" class="swal2-input" type="password" placeholder="Password (Min. 6 digit)">',
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'Daftar',
-                preConfirm: () => {
-                    return [
-                        document.getElementById('swal-name').value,
-                        document.getElementById('swal-email').value,
-                        document.getElementById('swal-pass').value
-                    ]
-                }
-            });
-
-            if (formValues) {
-                const [nama, email, pass] = formValues;
-                if(!nama || !email || !pass) return Swal.fire('Eror', 'Semua kolom wajib diisi', 'error');
-                
-                Swal.fire({title: 'Mendaftar...', didOpen: ()=>Swal.showLoading()});
-
-                createUserWithEmailAndPassword(auth, email, pass)
-                .then((cred) => {
-                    updateProfile(cred.user, { displayName: nama }).then(() => {
-                        set(ref(db, 'users/' + cred.user.uid), {
-                            fullName: nama,
-                            email: email,
-                            xp: 0,
-                            level: 1,
-                            role: 'student',
-                            booksRead: 0,
-                            profilePic: "https://i.ibb.co/5r2M63R/person-placeholder.png"
-                        }).then(() => {
-                            Swal.fire('Berhasil', 'Akun dibuat! Silakan login.', 'success');
-                        });
-                    });
-                })
-                .catch((err) => {
-                    Swal.fire('Gagal', err.message, 'error');
-                });
+        // UI TOGGLES
+        window.togglePass = (inputId, iconElement) => {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text"; iconElement.classList.remove("fa-eye"); iconElement.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password"; iconElement.classList.remove("fa-eye-slash"); iconElement.classList.add("fa-eye");
             }
         }
+
+        window.showRegister = () => {
+            document.getElementById('loginSection').classList.add('d-none-custom');
+            document.getElementById('forgotSection').classList.add('d-none-custom');
+            document.getElementById('registerSection').classList.remove('d-none-custom');
+        };
+        window.showLogin = () => {
+            document.getElementById('registerSection').classList.add('d-none-custom');
+            document.getElementById('forgotSection').classList.add('d-none-custom');
+            document.getElementById('loginSection').classList.remove('d-none-custom');
+        };
+        window.showForgot = () => {
+            document.getElementById('loginSection').classList.add('d-none-custom');
+            document.getElementById('registerSection').classList.add('d-none-custom');
+            document.getElementById('forgotSection').classList.remove('d-none-custom');
+        }
+
+        // REGISTER LOGIC
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const age = document.getElementById('regAge').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            if(password.length < 6) { Toast.fire({ icon: 'warning', title: 'Password min. 6 karakter' }); return; }
+            Toast.fire({ icon: 'info', title: 'Mendaftar...', timer: false });
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                await updateProfile(user, { displayName: name });
+                await set(ref(db, 'users/' + user.uid), {
+                    fullName: name, age: age, email: email,
+                    role: email.endsWith('@ac.id') ? 'admin' : 'user',
+                    level: 1, xp: 0, createdAt: new Date().toISOString()
+                });
+                Toast.fire({ icon: 'success', title: 'Berhasil! Silakan login.' });
+                showLogin(); document.getElementById('registerForm').reset();
+            } catch (error) {
+                let msg = error.message;
+                if(error.code === 'auth/email-already-in-use') msg = "Email sudah terdaftar.";
+                Toast.fire({ icon: 'error', title: msg });
+            }
+        });
+
+        // LOGIN LOGIC
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            Toast.fire({ icon: 'info', title: 'Masuk...', timer: false });
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    Toast.fire({ icon: 'success', title: 'Selamat Datang!' });
+                    setTimeout(() => {
+                        if (email.endsWith('@ac.id')) window.location.href = "admin/index.html"; 
+                        else window.location.href = "dashboard/index.html";
+                    }, 1000);
+                })
+                .catch((error) => {
+                    Toast.fire({ icon: 'error', title: 'Email atau Password salah.' });
+                });
+        });
+
+        // FORGOT PASSWORD
+        document.getElementById('forgotForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            Toast.fire({ icon: 'info', title: 'Mengirim link...' });
+            sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    Toast.fire({ icon: 'success', title: 'Cek email Anda!' });
+                    showLogin();
+                })
+                .catch(() => { Toast.fire({ icon: 'error', title: 'Email tidak ditemukan.' }); });
+        });
     </script>
 </body>
 </html>
