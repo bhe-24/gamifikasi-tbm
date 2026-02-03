@@ -7,109 +7,93 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    
     <style>
-        :root { --theme-color: #D8BFD8; --bg-color: #F8F5F8; }
-        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); }
-
-        .detail-header {
-            position: relative;
-            height: 250px;
-            background-color: var(--theme-color);
+        body { font-family: 'Poppins', sans-serif; background: #fff; padding-bottom: 80px; }
+        
+        /* HEADER ARTISTIK */
+        .preview-header {
+            position: relative; height: 300px; overflow: hidden;
+            background: #eee;
         }
         
-        .nav-overlay {
-            position: absolute; top: 15px; left: 15px; z-index: 10;
-        }
-        .btn-back-circle {
-            background: rgba(255,255,255,0.8); width: 40px; height: 40px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            color: #444; cursor: pointer;
+        /* Background Blur dari Cover */
+        .bg-blur {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            filter: blur(20px) brightness(0.7); transform: scale(1.1);
         }
 
-        /* Container Cover Melayang */
-        .book-highlight {
-            margin-top: -100px;
-            text-align: center;
-            padding: 0 20px;
+        .nav-top {
+            position: absolute; top: 15px; left: 15px; z-index: 10;
+        }
+        .btn-circle {
+            width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.3); color: white;
+            display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+            cursor: pointer;
+        }
+
+        /* CONTAINER BUKU UTAMA */
+        .book-container {
+            position: relative; margin-top: -120px; padding: 0 20px;
+            display: flex; flex-direction: column; align-items: center; z-index: 5;
         }
 
         .main-cover {
-            width: 140px; height: 200px;
-            object-fit: cover;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            border: 4px solid white;
+            width: 140px; height: 210px; object-fit: cover; border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 2px solid white;
         }
 
-        .info-section { text-align: center; margin-top: 15px; }
-        .big-title { font-size: 1.2rem; font-weight: 700; color: #333; }
-        .big-author { color: #777; font-size: 0.9rem; }
+        .book-meta { text-align: center; margin-top: 15px; width: 100%; }
+        .b-title { font-weight: 700; font-size: 1.2rem; color: #333; line-height: 1.3; margin-bottom: 5px; }
+        .b-author { color: #666; font-size: 0.9rem; margin-bottom: 10px; }
+        .b-badge { background: #F3E5F5; color: #8E24AA; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
 
-        .synopsis-box {
-            background: white;
-            margin: 20px;
-            padding: 20px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            color: #555;
-            line-height: 1.6;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        .synopsis-area {
+            margin: 20px 20px; padding: 20px; background: #FAFAFA; border-radius: 15px;
+            color: #555; font-size: 0.9rem; line-height: 1.7; text-align: justify;
         }
 
-        .action-area {
-            position: fixed; bottom: 0; width: 100%;
+        /* TOMBOL MULAI BACA FLOAT */
+        .float-action {
+            position: fixed; bottom: 0; left: 0; width: 100%;
             background: white; padding: 15px 20px;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
-            text-align: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 99;
         }
-
-        .btn-read {
-            background-color: var(--theme-color);
-            color: white; font-weight: 700;
-            width: 100%; border-radius: 50px; padding: 12px;
-            border: none; font-size: 1rem;
-            box-shadow: 0 4px 10px rgba(216, 191, 216, 0.5);
-            animation: pulse 2s infinite;
+        .btn-read-now {
+            width: 100%; padding: 12px; background: #8E24AA; color: white;
+            border-radius: 50px; border: none; font-weight: 700;
+            box-shadow: 0 4px 15px rgba(142, 36, 170, 0.4);
+            transition: transform 0.2s;
         }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
+        .btn-read-now:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
 
-    <div class="detail-header">
-        <div class="nav-overlay">
-            <div class="btn-back-circle" onclick="history.back()">
-                <i class="fas fa-arrow-left"></i>
-            </div>
+    <div class="preview-header">
+        <div class="bg-blur" id="bgBlur"></div>
+        <div class="nav-top">
+            <div class="btn-circle" onclick="history.back()"><i class="fas fa-arrow-left"></i></div>
         </div>
     </div>
 
-    <div class="book-highlight">
-        <img id="dCover" src="" class="main-cover" onerror="this.src='https://placehold.co/140x200'">
-        <div class="info-section">
-            <div id="dTitle" class="big-title">Memuat...</div>
-            <div id="dAuthor" class="big-author">...</div>
-            <div class="mt-2">
-                <span id="dCat" class="badge bg-secondary">Kategori</span>
-                <span id="dViews" class="badge text-bg-light border"><i class="fas fa-eye"></i> 0</span>
-            </div>
+    <div class="book-container">
+        <img src="https://placehold.co/140x210" id="mainCover" class="main-cover">
+        <div class="book-meta">
+            <div class="b-title" id="bookTitle">Memuat...</div>
+            <div class="b-author" id="bookAuthor">...</div>
+            <span class="b-badge" id="bookCat">Kategori</span>
         </div>
     </div>
 
-    <div class="synopsis-box">
-        <h6 style="font-weight:700;">Sinopsis</h6>
-        <p id="dSynopsis">Mengambil data...</p>
+    <div class="synopsis-area">
+        <h6 style="font-weight:700; color:#333;">Sinopsis</h6>
+        <div id="bookDesc">...</div>
     </div>
 
-    <div style="height: 80px;"></div> <div class="action-area">
-        <button id="btnStartRead" class="btn btn-read">
-            BACA SEKARANG <i class="fas fa-book-reader ms-2"></i>
+    <div class="float-action">
+        <button class="btn-read-now" id="btnRead">
+            MULAI BACA <i class="fas fa-book-reader ms-2"></i>
         </button>
     </div>
 
@@ -130,34 +114,23 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Ambil ID dari URL (?id=xxxx)
         const urlParams = new URLSearchParams(window.location.search);
-        const bookId = urlParams.get('id');
+        const id = urlParams.get('id');
 
-        if(bookId) {
-            const bookRef = ref(db, 'books/' + bookId);
-            get(bookRef).then((snapshot) => {
-                if(snapshot.exists()) {
-                    const data = snapshot.val();
-                    document.title = data.title;
-                    document.getElementById('dCover').src = data.coverUrl;
-                    document.getElementById('dTitle').innerText = data.title;
-                    document.getElementById('dAuthor').innerText = data.author;
-                    document.getElementById('dCat').innerText = data.category;
-                    document.getElementById('dViews').innerHTML = `<i class="fas fa-eye"></i> ${data.views || 0}`;
-                    document.getElementById('dSynopsis').innerText = data.synopsis || "Tidak ada sinopsis.";
-
-                    // Link Tombol Baca
-                    document.getElementById('btnStartRead').onclick = () => {
-                        window.location.href = `baca.html?id=${bookId}`;
-                    };
-                } else {
-                    alert('Buku tidak ditemukan!');
-                    history.back();
+        if(id) {
+            get(ref(db, 'books/' + id)).then(snap => {
+                if(snap.exists()) {
+                    const d = snap.val();
+                    document.getElementById('bgBlur').style.backgroundImage = `url('${d.coverUrl}')`;
+                    document.getElementById('mainCover').src = d.coverUrl;
+                    document.getElementById('bookTitle').innerText = d.title;
+                    document.getElementById('bookAuthor').innerText = d.author;
+                    document.getElementById('bookCat').innerText = d.category;
+                    document.getElementById('bookDesc').innerText = d.content.substring(0, 150) + "... (Baca selengkapnya di dalam)";
+                    
+                    document.getElementById('btnRead').onclick = () => window.location.href = `baca.html?id=${id}`;
                 }
             });
-        } else {
-            history.back();
         }
     </script>
 </body>
