@@ -3,100 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login - TBM Digital</title>
+    <title>Login TBM Digital</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
         body {
-            background-color: #E3F2FD;
+            background-color: #f5f5f5;
             font-family: 'Poppins', sans-serif;
             height: 100vh;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
         }
 
-        .login-card {
+        .card-login {
             background: white;
             padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 400px;
-            margin: 20px;
+            max-width: 380px;
             text-align: center;
         }
 
-        .app-logo {
-            width: 90px; height: 90px;
+        .logo-img {
+            width: 80px;
+            height: 80px;
             object-fit: contain;
             margin-bottom: 15px;
+            /* Placeholder style biar rapi kalau gambar belum loading */
+            background: #fff; 
             border-radius: 50%;
-            padding: 5px;
-            background: #f0f0f0; /* Placeholder background */
-        }
-
-        .app-title {
-            font-weight: 700;
-            color: #1565C0;
-            margin-bottom: 5px;
         }
 
         .form-control {
-            border-radius: 10px;
-            padding: 12px;
+            border-radius: 8px;
+            padding: 10px 15px;
             margin-bottom: 15px;
-            background: #F5F5F5;
-            border: none;
+            font-size: 0.95rem;
         }
 
-        .btn-login {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: 600;
-            background: #1565C0;
-            color: white;
+        .btn-primary-custom {
+            background-color: #1565C0;
             border: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
             margin-bottom: 10px;
         }
-        
-        .btn-register {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: 600;
-            background: white;
-            color: #1565C0;
+
+        .btn-outline-custom {
+            background-color: transparent;
             border: 1px solid #1565C0;
+            color: #1565C0;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
 
-    <div class="login-card">
-        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" id="appLogo" class="app-logo">
+    <div class="card-login">
+        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" id="logoApp" class="logo-img">
         
-        <h4 class="app-title">TBM Digital</h4>
-        <p class="text-muted small mb-4">Masuk untuk mulai membaca</p>
+        <h4 style="font-weight: 700; margin-bottom: 5px;">Selamat Datang</h4>
+        <p class="text-muted small mb-4">Silakan masuk ke akun kamu</p>
 
         <form id="loginForm">
             <input type="email" id="email" class="form-control" placeholder="Email" required>
-            <div class="input-group mb-3">
-                <input type="password" id="password" class="form-control mb-0" placeholder="Kata Sandi" required>
-                <span class="input-group-text bg-light border-0" onclick="togglePass()" style="cursor:pointer">
-                    <i class="fas fa-eye" id="eyeIcon"></i>
-                </span>
-            </div>
+            <input type="password" id="password" class="form-control" placeholder="Kata Sandi" required>
             
-            <button type="submit" class="btn-login">MASUK</button>
-            <button type="button" class="btn-register" onclick="handleRegister()">DAFTAR BARU</button>
+            <button type="submit" class="btn-primary-custom">MASUK</button>
+            <button type="button" class="btn-outline-custom" onclick="registerPopup()">DAFTAR AKUN</button>
         </form>
-
-        <div class="mt-3">
-            <a href="privacy.html" class="small text-muted text-decoration-none">Kebijakan Privasi</a>
+        
+        <div class="mt-3 text-muted small">
+            <a href="privacy.html" style="text-decoration: none; color: #888;">Kebijakan Privasi</a>
         </div>
     </div>
 
@@ -120,72 +111,46 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // 1. FITUR BACA LOGO DARI DATABASE
+        // --- 1. LOGIKA GANTI LOGO OTOMATIS (Satu-satunya tambahan) ---
         onValue(ref(db, 'settings'), (snap) => {
-            const data = snap.val();
-            if(data && data.logoUrl) {
-                document.getElementById('appLogo').src = data.logoUrl;
+            const d = snap.val();
+            // Hanya ganti jika di database ada link logo
+            if(d && d.logoUrl) {
+                document.getElementById('logoApp').src = d.logoUrl;
             }
         });
+        // ------------------------------------------------------------
 
-        // 2. TOGGLE PASSWORD
-        window.togglePass = () => {
-            const passInput = document.getElementById('password');
-            const icon = document.getElementById('eyeIcon');
-            if (passInput.type === "password") {
-                passInput.type = "text";
-                icon.classList.remove("fa-eye");
-                icon.classList.add("fa-eye-slash");
-            } else {
-                passInput.type = "password";
-                icon.classList.remove("fa-eye-slash");
-                icon.classList.add("fa-eye");
-            }
-        }
-
-        // 3. LOGIN LOGIC
+        // LOGIN
         document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
 
-            Swal.fire({ title: 'Memeriksa...', didOpen: () => Swal.showLoading() });
+            Swal.fire({title: 'Memuat...', didOpen: ()=>Swal.showLoading()});
 
             signInWithEmailAndPassword(auth, email, pass)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    
-                    // Cek Apakah Admin
-                    if (email.endsWith('@ac.id')) {
-                        Swal.fire('Halo Admin!', 'Masuk ke panel kontrol...', 'success')
-                            .then(() => window.location.href = "admin/index.html");
+                .then((cred) => {
+                    const emailUser = cred.user.email;
+                    if(emailUser.endsWith('@ac.id')) {
+                        window.location.href = "admin/index.html";
                     } else {
-                        // Cek apakah user sudah punya data lengkap
-                        get(ref(db, 'users/' + user.uid)).then((snapshot) => {
-                            if (snapshot.exists()) {
-                                window.location.href = "dashboard/index.html";
-                            } else {
-                                // Jika user ada di Auth tapi tidak ada di Database (Jaga-jaga error)
-                                Swal.fire('Error', 'Data pengguna tidak ditemukan.', 'error');
-                            }
-                        });
+                        window.location.href = "dashboard/index.html";
                     }
                 })
-                .catch((error) => {
-                    let msg = "Email atau sandi salah.";
-                    if (error.code === 'auth/user-not-found') msg = "Akun belum terdaftar.";
-                    Swal.fire('Gagal Masuk', msg, 'error');
+                .catch((err) => {
+                    Swal.fire('Gagal', 'Email atau password salah.', 'error');
                 });
         });
 
-        // 4. REGISTER LOGIC
-        window.handleRegister = async () => {
+        // REGISTER (POPUP STANDAR)
+        window.registerPopup = async () => {
             const { value: formValues } = await Swal.fire({
-                title: 'Daftar Akun Baru',
+                title: 'Daftar Akun',
                 html:
                     '<input id="swal-name" class="swal2-input" placeholder="Nama Lengkap">' +
                     '<input id="swal-email" class="swal2-input" placeholder="Email">' +
-                    '<input id="swal-pass" class="swal2-input" type="password" placeholder="Kata Sandi (Min 6 karakter)">',
+                    '<input id="swal-pass" class="swal2-input" type="password" placeholder="Password (Min. 6 digit)">',
                 focusConfirm: false,
                 showCancelButton: true,
                 confirmButtonText: 'Daftar',
@@ -200,36 +165,31 @@
 
             if (formValues) {
                 const [nama, email, pass] = formValues;
-                if(!nama || !email || !pass) return Swal.fire('Error', 'Semua kolom wajib diisi!', 'warning');
-
-                Swal.fire({ title: 'Mendaftarkan...', didOpen: () => Swal.showLoading() });
+                if(!nama || !email || !pass) return Swal.fire('Eror', 'Semua kolom wajib diisi', 'error');
+                
+                Swal.fire({title: 'Mendaftar...', didOpen: ()=>Swal.showLoading()});
 
                 createUserWithEmailAndPassword(auth, email, pass)
-                    .then((cred) => {
-                        updateProfile(cred.user, { displayName: nama }).then(() => {
-                            // SIMPAN DATA KE DATABASE
-                            set(ref(db, 'users/' + cred.user.uid), {
-                                fullName: nama,
-                                email: email,
-                                xp: 0,
-                                level: 1,
-                                role: 'student',
-                                booksRead: 0,
-                                profilePic: "https://i.ibb.co/5r2M63R/person-placeholder.png",
-                                joinedAt: new Date().toLocaleDateString('id-ID')
-                            }).then(() => {
-                                Swal.fire('Berhasil!', 'Akun telah dibuat. Silakan login.', 'success');
-                            });
+                .then((cred) => {
+                    updateProfile(cred.user, { displayName: nama }).then(() => {
+                        set(ref(db, 'users/' + cred.user.uid), {
+                            fullName: nama,
+                            email: email,
+                            xp: 0,
+                            level: 1,
+                            role: 'student',
+                            booksRead: 0,
+                            profilePic: "https://i.ibb.co/5r2M63R/person-placeholder.png"
+                        }).then(() => {
+                            Swal.fire('Berhasil', 'Akun dibuat! Silakan login.', 'success');
                         });
-                    })
-                    .catch((error) => {
-                        let msg = error.message;
-                        if(error.code === 'auth/email-already-in-use') msg = "Email sudah terdaftar!";
-                        if(error.code === 'auth/weak-password') msg = "Sandi minimal 6 karakter.";
-                        Swal.fire('Gagal Daftar', msg, 'error');
                     });
+                })
+                .catch((err) => {
+                    Swal.fire('Gagal', err.message, 'error');
+                });
             }
-        };
+        }
     </script>
 </body>
 </html>
