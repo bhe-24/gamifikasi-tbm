@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kirim Karya</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root { --primary-orange: #FB8C00; --light-bg: #FFF3E0; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--light-bg); padding-bottom: 30px; }
+
+        .page-header {
+            background: linear-gradient(135deg, #FB8C00, #FFA726); /* Tema Oranye Kreatif */
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            color: white;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 15px rgba(251, 140, 0, 0.2);
+            position: sticky; top: 0; z-index: 100;
+        }
+        
+        .btn-back { color: white; font-size: 1.2rem; background: none; border: none; }
+        .page-title { flex-grow: 1; text-align: center; font-weight: 700; font-size: 1.1rem; margin-right: 20px; }
+
+        .form-card {
+            background: white; margin: 20px; padding: 25px;
+            border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .form-control {
+            border-radius: 10px; padding: 12px; border: 1px solid #ddd;
+            background: #f9f9f9; font-size: 0.9rem;
+        }
+        .form-control:focus { border-color: var(--primary-orange); background: white; box-shadow: none; }
+
+        .btn-submit {
+            width: 100%; background: var(--primary-orange); color: white;
+            font-weight: 600; padding: 12px; border-radius: 12px; border: none; margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(251, 140, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-header">
+        <button onclick="window.location.href='index.html'" class="btn-back"><i class="fas fa-arrow-left"></i></button>
+        <div class="page-title">Ruang Berkarya</div>
+    </div>
+
+    <div class="p-3 text-center text-muted" style="font-size: 0.85rem;">
+        Punya puisi atau cerpen? Kirim di sini! <br>Karya terbaik akan diterbitkan di aplikasi.
+    </div>
+
+    <div class="form-card">
+        <form id="karyaForm">
+            <div class="mb-3">
+                <label class="form-label" style="font-weight:600;">Judul Karya</label>
+                <input type="text" id="judulKarya" class="form-control" placeholder="Judul yang menarik..." required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" style="font-weight:600;">Jenis Karya</label>
+                <select id="kategoriKarya" class="form-control">
+                    <option value="Puisi">Puisi</option>
+                    <option value="Cerpen">Cerpen (Cerita Pendek)</option>
+                    <option value="Pantun">Pantun</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" style="font-weight:600;">Isi Karya</label>
+                <textarea id="isiKarya" class="form-control" rows="10" placeholder="Tulis karyamu di sini..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                KIRIM KARYAKU <i class="fas fa-magic ms-2"></i>
+            </button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, push, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
+            authDomain: "pkm-pm-def08.firebaseapp.com",
+            projectId: "pkm-pm-def08",
+            storageBucket: "pkm-pm-def08.firebasestorage.app",
+            messagingSenderId: "1077227616889",
+            appId: "1:1077227616889:web:9ce3a57e3d46012acab2a8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        let currentUser = null;
+        let userData = {};
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                get(ref(db, 'users/' + user.uid)).then(snap => { userData = snap.val(); });
+            } else {
+                window.location.href = "../index.html";
+            }
+        });
+
+        document.getElementById('karyaForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if(!currentUser) return;
+
+            const judul = document.getElementById('judulKarya').value;
+            const kategori = document.getElementById('kategoriKarya').value;
+            const isi = document.getElementById('isiKarya').value;
+
+            // Loading
+            Swal.fire({
+                title: 'Mengirim...',
+                didOpen: () => Swal.showLoading()
+            });
+
+            const newWorkRef = push(ref(db, 'works'));
+            set(newWorkRef, {
+                uid: currentUser.uid,
+                authorName: userData.fullName || currentUser.displayName,
+                title: judul,
+                category: kategori,
+                content: isi,
+                status: 'pending',
+                timestamp: Date.now()
+            }).then(() => {
+                Swal.fire({
+                    icon: 'success', title: 'Hebat!',
+                    text: 'Karyamu sudah masuk dapur redaksi.',
+                    confirmButtonColor: '#FB8C00'
+                }).then(() => window.location.href = 'index.html');
+            }).catch(err => {
+                Swal.fire('Error', 'Gagal mengirim karya.', 'error');
+            });
+        });
+    </script>
+</body>
+</html>
