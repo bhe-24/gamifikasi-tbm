@@ -11,45 +11,55 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #E3F2FD; padding-bottom: 50px; }
+        body { font-family: 'Poppins', sans-serif; background-color: #E8F5E9; padding-bottom: 50px; }
         
+        /* HEADER HIJAU */
         .admin-header {
-            background: #43A047; /* Hijau Verifikasi */
-            color: white; padding: 15px 20px;
-            display: flex; align-items: center; gap: 15px;
+            background: #43A047; color: white; padding: 15px 20px;
+            display: flex; align-items: center; justify-content: space-between;
             position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .report-card {
             background: white; margin: 15px 20px; padding: 20px; border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            border-left: 5px solid #FFC107; /* Kuning = Pending */
+            border-left: 5px solid #FFC107; /* Kuning tandanya Pending */
+            animation: slideUp 0.3s ease;
         }
         
-        .user-info { font-weight: 700; color: #1565C0; margin-bottom: 5px; display: flex; justify-content: space-between;}
-        .book-info { font-weight: 600; font-size: 0.9rem; margin-bottom: 10px; color: #333; }
-        .summary-box { background: #f9f9f9; padding: 10px; border-radius: 8px; font-size: 0.85rem; color: #555; font-style: italic; margin-bottom: 15px;}
+        .user-info { font-weight: 700; color: #1B5E20; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;}
+        .book-info { font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; color: #333; }
+        .summary-box { background: #f9f9f9; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #555; font-style: italic; margin-bottom: 15px; border: 1px dashed #ccc;}
         
         .btn-action { width: 48%; border-radius: 20px; padding: 8px; font-size: 0.9rem; font-weight: 600; }
+        
+        @keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
 
     <div class="admin-header">
-        <i class="fas fa-arrow-left" onclick="window.location.href='index.html'" style="cursor:pointer; font-size:1.2rem;"></i>
-        <span style="font-weight:700; font-size:1.1rem;">Verifikasi Laporan</span>
+        <div class="d-flex align-items-center gap-3">
+            <i class="fas fa-arrow-left" onclick="window.location.href='index.html'" style="cursor:pointer; font-size:1.2rem;"></i>
+            <span style="font-weight:700; font-size:1.1rem;">Verifikasi Laporan</span>
+        </div>
+        <button onclick="window.location.href='arsip-laporan.html'" class="btn btn-sm btn-light text-success fw-bold shadow-sm">
+            <i class="fas fa-history me-1"></i> Arsip
+        </button>
     </div>
 
     <div id="reportContainer">
         <div class="text-center p-5 text-muted">
-            <i class="fas fa-spinner fa-spin"></i> Memuat data...
+            <i class="fas fa-spinner fa-spin mb-2"></i><br>Memuat data...
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, update, push, runTransaction, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, increment, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // CONFIG SERVER SINGAPURA
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -63,35 +73,43 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // LOAD LAPORAN PENDING
+        // LOAD DATA
         onValue(ref(db, 'reports'), (snap) => {
             const container = document.getElementById('reportContainer');
             container.innerHTML = '';
 
             if(!snap.exists()) {
-                container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada laporan baru.</div>';
+                container.innerHTML = '<div class="text-center p-5 text-muted"><i class="fas fa-check-circle fa-3x mb-3 text-success" style="opacity:0.3"></i><br>Semua laporan aman!</div>';
                 return;
             }
 
-            let hasPending = false;
+            let pendingCount = 0;
+
             snap.forEach(child => {
                 const r = child.val();
                 const key = child.key;
 
+                // Hanya tampilkan yang STATUS = PENDING
                 if(r.status === 'pending') {
-                    hasPending = true;
+                    pendingCount++;
                     const html = `
                         <div class="report-card">
                             <div class="user-info">
                                 <span><i class="fas fa-user-circle"></i> ${r.userName}</span>
-                                <small class="text-muted" style="font-weight:400; font-size:0.75rem;">${r.date}</small>
+                                <span class="badge bg-warning text-dark">Baru</span>
                             </div>
-                            <div class="book-info"><i class="fas fa-book"></i> ${r.bookTitle}</div>
+                            <div class="text-muted small mb-2"><i class="far fa-calendar-alt"></i> ${r.date}</div>
+                            
+                            <div class="book-info"><i class="fas fa-book-open text-success me-1"></i> ${r.bookTitle}</div>
                             <div class="summary-box">"${r.summary}"</div>
                             
                             <div class="d-flex justify-content-between">
-                                <button class="btn btn-outline-danger btn-action" onclick="rejectReport('${key}')">Tolak</button>
-                                <button class="btn btn-success btn-action" onclick="approveReport('${key}', '${r.uid}', 50)">Terima (+50 XP)</button>
+                                <button class="btn btn-outline-danger btn-action" onclick="rejectReport('${key}')">
+                                    <i class="fas fa-times"></i> Tolak
+                                </button>
+                                <button class="btn btn-success btn-action" onclick="approveReport('${key}', '${r.uid}', 50)">
+                                    <i class="fas fa-check"></i> Terima (+50)
+                                </button>
                             </div>
                         </div>
                     `;
@@ -99,42 +117,44 @@
                 }
             });
 
-            if(!hasPending) container.innerHTML = '<div class="text-center p-5 text-muted">Semua laporan sudah diperiksa.</div>';
+            if(pendingCount === 0) {
+                container.innerHTML = '<div class="text-center p-5 text-muted"><i class="fas fa-check-circle fa-3x mb-3 text-success" style="opacity:0.3"></i><br>Tidak ada laporan baru.</div>';
+            }
         });
 
-        // FUNGSI TERIMA (APPROVE)
+        // FUNGSI TERIMA (Global Window)
         window.approveReport = (reportKey, userUid, points) => {
-            // 1. Update Status Report
+            // 1. Update Status Laporan jadi 'approved'
             update(ref(db, `reports/${reportKey}`), { status: 'approved' });
 
-            // 2. Tambah XP User (Atomic Increment)
-            update(ref(db, `users/${userUid}`), {
-                xp: increment(points)
-            });
+            // 2. Tambah XP User (+50)
+            update(ref(db, `users/${userUid}`), { xp: increment(parseInt(points)) });
 
-            // 3. Catat Log User
+            // 3. Catat Log ke Dashboard User (Penting biar muncul notif hijau di user)
             push(ref(db, `logs/${userUid}`), {
-                activity: "Laporan Buku Diterima",
-                points: points,
+                activity: "Laporan Baca Diterima",
+                points: parseInt(points),
                 date: new Date().toLocaleDateString('id-ID')
             });
 
-            Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Poin sudah dikirim ke user!', timer: 1500, showConfirmButton: false });
+            const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
+            Toast.fire({icon: 'success', title: 'Laporan Diterima (+50 XP)'});
         };
 
         // FUNGSI TOLAK
         window.rejectReport = (reportKey) => {
             Swal.fire({
                 title: 'Tolak Laporan?',
-                text: "User tidak akan dapat poin.",
+                text: "User tidak akan mendapatkan poin.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Ya, Tolak',
-                confirmButtonColor: '#d33'
+                confirmButtonColor: '#d33',
+                cancelButtonText: 'Batal'
             }).then((res) => {
                 if(res.isConfirmed) {
                     update(ref(db, `reports/${reportKey}`), { status: 'rejected' });
-                    Swal.fire('Ditolak', '', 'info');
+                    Swal.fire('Ditolak', 'Laporan telah ditolak.', 'info');
                 }
             });
         }
