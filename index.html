@@ -3,237 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Masuk - Taman Bacaan Masyarakat</title>
+    <title>Masuk - TBM Digital</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* 2. CSS CUSTOM - DESAIN VISUAL */
-        :root {
-            --pastel-blue: #AEC6CF;
-            --pastel-red: rgba(255, 179, 186, 0.5);
-            --pastel-orange: rgba(255, 223, 186, 0.5);
-            --pastel-green: rgba(186, 255, 201, 0.5);
-            --primary-btn: #FF6F61; /* Warna tegas tapi ceria */
-        }
-
+        /* 1. VISUAL: Biru Muda Fresh */
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
             height: 100vh;
-            overflow: hidden; /* Supaya background tidak scroll */
+            width: 100vw;
+            overflow: hidden; /* Kunci layar */
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: var(--pastel-blue);
+            background: linear-gradient(180deg, #E3F2FD 0%, #BBDEFB 100%);
+            position: relative;
         }
 
-        /* Animasi Background Polkadot Berjalan */
-        .animated-bg {
+        /* Animasi Ombak Halus di Bawah */
+        .wave-bg {
             position: absolute;
-            top: 0;
+            bottom: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            z-index: -1;
-            background-image: 
-                radial-gradient(circle, var(--pastel-red) 10%, transparent 11%),
-                radial-gradient(circle, var(--pastel-orange) 10%, transparent 11%),
-                radial-gradient(circle, var(--pastel-green) 10%, transparent 11%);
-            background-size: 100px 100px;
-            background-position: 0 0, 50px 50px, 25px 75px;
-            animation: moveDots 20s linear infinite;
+            height: 30vh;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path fill="%232196F3" fill-opacity="0.1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,261.3C960,256,1056,224,1152,197.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-repeat: no-repeat;
+            z-index: 0;
         }
 
-        @keyframes moveDots {
-            0% { background-position: 0 0, 50px 50px, 25px 75px; }
-            100% { background-position: 100px 100px, 150px 150px, 125px 175px; }
-        }
-
-        /* Container Kartu Login */
+        /* Container Kartu */
         .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            width: 90%;
-            max-width: 400px; /* Tampilan Desktop tetep rapi */
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 25px 25px; /* Padding lebih kecil biar muat */
+            width: 85%;
+            max-width: 380px;
+            box-shadow: 0 15px 35px rgba(33, 150, 243, 0.15);
             text-align: center;
-            animation: slideUp 0.8s ease-out;
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            /* Pastikan muat di layar kecil */
+            max-height: 90vh;
+            overflow-y: auto; 
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        /* Scrollbar sembunyi biar rapi */
+        .login-card::-webkit-scrollbar { display: none; }
 
         /* Logo & Header */
         .app-logo {
-            width: 80px;
-            height: 80px;
+            width: 70px; /* Diperkecil sedikit */
+            height: 70px;
             object-fit: contain;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             border-radius: 50%;
             background: white;
             padding: 5px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .app-title {
             font-weight: 700;
-            color: #444;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
+            color: #1565C0; /* Biru Tua */
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
         }
 
-        /* Form Styling */
-        .form-control {
-            border-radius: 12px;
-            padding: 12px;
+        h5.section-title {
+            font-size: 0.9rem;
+            color: #666;
             margin-bottom: 15px;
-            border: 2px solid #eee;
-            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        /* Form Input Lebih Padat */
+        .form-control {
+            border-radius: 30px; /* Membulat penuh */
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            margin-bottom: 10px; /* Jarak antar input diperkecil */
+            border: 1px solid #BBDEFB;
+            background: #F0F8FF;
         }
 
         .form-control:focus {
-            border-color: var(--pastel-blue);
-            box-shadow: none;
+            border-color: #2196F3;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
         }
 
+        /* Tombol Menarik (Gradient) */
         .btn-custom {
             width: 100%;
-            padding: 12px;
-            border-radius: 12px;
+            padding: 10px;
+            border-radius: 30px;
             font-weight: 600;
+            font-size: 0.95rem;
             border: none;
-            margin-top: 10px;
-            transition: transform 0.2s;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .btn-primary-custom {
-            background-color: var(--primary-btn);
+        .btn-gradient {
+            background: linear-gradient(90deg, #2196F3 0%, #00BCD4 100%);
             color: white;
         }
 
-        .btn-primary-custom:hover {
-            background-color: #ff5a4d;
+        .btn-gradient:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
         }
 
-        .btn-primary-custom:active {
-            transform: scale(0.95);
-        }
-
+        /* Toggle Link (Daftar/Masuk) */
         .toggle-text {
             margin-top: 15px;
-            font-size: 0.9rem;
-            color: #666;
+            font-size: 0.8rem;
+            color: #777;
         }
 
         .toggle-link {
-            color: var(--primary-btn);
+            color: #1976D2;
             cursor: pointer;
-            font-weight: 600;
-            text-decoration: none;
+            font-weight: 700;
+            text-decoration: underline;
         }
 
-        /* Footer */
-        .footer-text {
+        /* Helper */
+        .d-none-custom { display: none; }
+        
+        /* Footer Hak Cipta */
+        .footer-mini {
             position: absolute;
             bottom: 10px;
             width: 100%;
             text-align: center;
-            font-size: 0.75rem;
-            color: rgba(0,0,0,0.5);
-        }
-        
-        .footer-text a {
-            color: #444;
-            text-decoration: none;
-        }
-
-        /* Helper untuk sembunyikan section */
-        .d-none-custom {
-            display: none;
+            font-size: 0.65rem;
+            color: rgba(0,0,0,0.3);
+            z-index: 10;
         }
     </style>
 </head>
 <body>
 
-    <div class="animated-bg"></div>
+    <div class="wave-bg"></div>
 
     <div class="login-card">
-        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" alt="Logo TBM" class="app-logo" id="dynamicLogo">
+        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" alt="Logo" class="app-logo" id="dynamicLogo">
         
         <h2 class="app-title">Taman Bacaan<br>Masyarakat</h2>
 
         <div id="loginSection">
-            <h5 class="mb-3 text-muted">Selamat Datang!</h5>
+            <h5 class="section-title">Silakan Masuk</h5>
             <form id="loginForm">
                 <input type="email" id="loginEmail" class="form-control" placeholder="Email (gmail / ac.id)" required>
                 <input type="password" id="loginPassword" class="form-control" placeholder="Password" required>
                 
                 <div class="text-end mb-2">
-                    <small><a href="#" class="text-muted" onclick="showForgot()">Lupa Password?</a></small>
+                    <small><a href="#" class="text-secondary text-decoration-none" onclick="showForgot()" style="font-size: 0.75rem;">Lupa Password?</a></small>
                 </div>
 
-                <button type="submit" class="btn btn-custom btn-primary-custom">
-                    MASUK SEKARANG <i class="fas fa-arrow-right ms-2"></i>
+                <button type="submit" class="btn btn-custom btn-gradient">
+                    MASUK <i class="fas fa-sign-in-alt ms-2"></i>
                 </button>
             </form>
             <div class="toggle-text">
-                Belum punya akun? <span class="toggle-link" onclick="showRegister()">Daftar di sini</span>
+                Belum punya akun? <span class="toggle-link" onclick="showRegister()">Daftar Disini</span>
             </div>
         </div>
 
         <div id="registerSection" class="d-none-custom">
-            <h5 class="mb-3 text-muted">Buat Akun Baru</h5>
+            <h5 class="section-title">Buat Akun Baru</h5>
             <form id="registerForm">
                 <input type="text" id="regName" class="form-control" placeholder="Nama Lengkap" required>
-                <input type="number" id="regAge" class="form-control" placeholder="Umur" required>
-                <input type="text" id="regUsername" class="form-control" placeholder="Username Unik" required>
-                <input type="email" id="regEmail" class="form-control" placeholder="Email" required>
-                <input type="password" id="regPassword" class="form-control" placeholder="Password (Min. 6 Karakter)" required>
+                <input type="number" id="regAge" class="form-control" placeholder="Umur (Angka)" required>
+                <input type="email" id="regEmail" class="form-control" placeholder="Email Aktif" required>
+                <input type="password" id="regPassword" class="form-control" placeholder="Password (Min. 6 Digit)" required>
 
-                <button type="submit" class="btn btn-custom btn-primary-custom">
-                    DAFTAR AKUN <i class="fas fa-user-plus ms-2"></i>
+                <button type="submit" class="btn btn-custom btn-gradient">
+                    DAFTAR SEKARANG
                 </button>
             </form>
             <div class="toggle-text">
-                Sudah punya akun? <span class="toggle-link" onclick="showLogin()">Masuk saja</span>
+                Sudah punya akun? <span class="toggle-link" onclick="showLogin()">Masuk Saja</span>
             </div>
         </div>
 
         <div id="forgotSection" class="d-none-custom">
-            <h5 class="mb-3 text-muted">Reset Password</h5>
-            <p style="font-size: 0.8rem;">Masukkan email kamu, kami akan kirim link reset.</p>
+            <h5 class="section-title">Reset Password</h5>
+            <p style="font-size: 0.75rem; color:#888; margin-bottom:10px;">Masukkan email, link reset akan dikirim.</p>
             <form id="forgotForm">
                 <input type="email" id="forgotEmail" class="form-control" placeholder="Email Terdaftar" required>
-                <button type="submit" class="btn btn-custom btn-primary-custom">
+                <button type="submit" class="btn btn-custom btn-gradient">
                     KIRIM LINK
                 </button>
             </form>
             <div class="toggle-text">
-                <span class="toggle-link" onclick="showLogin()">Kembali ke Login</span>
+                <span class="toggle-link" onclick="showLogin()">Batal</span>
             </div>
         </div>
     </div>
 
-    <div class="footer-text">
-        &copy; 2026 TBM Digital. <a href="privacy.html">Kebijakan Privasi</a>
-    </div>
+    <div class="footer-mini">&copy; 2026 TBM Digital Indonesia</div>
 
     <script type="module">
-        // Import Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Konfigurasi Firebase Anda
+        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -243,13 +233,13 @@
             appId: "1:1077227616889:web:9ce3a57e3d46012acab2a8"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- FUNGSI UI TOGGLE (Ganti Tampilan Login/Register) ---
+        // --- NAVIGASI UI ---
         window.showRegister = () => {
+            // Popup info kecil sebelum pindah (Opsional, biar interaktif)
             document.getElementById('loginSection').classList.add('d-none-custom');
             document.getElementById('forgotSection').classList.add('d-none-custom');
             document.getElementById('registerSection').classList.remove('d-none-custom');
@@ -267,93 +257,102 @@
             document.getElementById('forgotSection').classList.remove('d-none-custom');
         }
 
-        // --- LOGIKA REGISTER ---
-        const registerForm = document.getElementById('registerForm');
-        registerForm.addEventListener('submit', async (e) => {
+        // --- FUNGSI REGISTER ---
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Ambil data
             const name = document.getElementById('regName').value;
             const age = document.getElementById('regAge').value;
-            const username = document.getElementById('regUsername').value;
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
 
-            // Validasi Domain untuk Register (Opsional: Jika admin hanya boleh dibuat manual, bisa diblokir disini)
-            // Untuk sekarang kita bebaskan user mendaftar.
+            // Validasi Sederhana
+            if(password.length < 6) {
+                Swal.fire({
+                    icon: 'warning', title: 'Password Lemah',
+                    text: 'Password minimal 6 karakter ya!',
+                    confirmButtonColor: '#2196F3'
+                });
+                return;
+            }
+
+            // Tampilkan Loading
+            Swal.fire({
+                title: 'Sedang Mendaftar...',
+                text: 'Tunggu sebentar ya.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
 
             try {
-                // 1. Buat User di Auth
+                // 1. Create Auth
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // 2. Update Profile Auth (Nama Display)
+                // 2. Update Nama
                 await updateProfile(user, { displayName: name });
 
-                // 3. Simpan data tambahan ke Realtime Database (TIDAK BOLEH LOKAL STORAGE)
-                // Struktur: users/{uid}
+                // 3. Simpan DB
                 await set(ref(db, 'users/' + user.uid), {
                     fullName: name,
                     age: age,
-                    username: username,
                     email: email,
-                    role: email.endsWith('@ac.id') ? 'admin' : 'user', // Set role otomatis berdasarkan domain
-                    level: 1, // Default Level Gamifikasi
+                    role: email.endsWith('@ac.id') ? 'admin' : 'user',
+                    level: 1,
                     xp: 0,
                     badges: [],
                     createdAt: new Date().toISOString()
                 });
 
+                // Sukses
                 Swal.fire({
                     icon: 'success',
-                    title: 'Hore! Akun Jadi',
-                    text: 'Selamat bergabung! Silakan login.',
-                    confirmButtonColor: '#FF6F61'
+                    title: 'Berhasil!',
+                    text: 'Akunmu sudah jadi. Yuk login sekarang.',
+                    confirmButtonColor: '#2196F3'
                 }).then(() => {
                     showLogin();
-                    registerForm.reset();
+                    document.getElementById('registerForm').reset();
                 });
 
             } catch (error) {
-                console.error(error);
-                let msg = "Terjadi kesalahan.";
-                if(error.code === 'auth/email-already-in-use') msg = "Email sudah terdaftar!";
-                if(error.code === 'auth/weak-password') msg = "Password terlalu lemah (min 6 karakter).";
-                
+                let msg = error.message;
+                if(error.code === 'auth/email-already-in-use') msg = "Email ini sudah terdaftar loh.";
                 Swal.fire({
                     icon: 'error',
-                    title: 'Oops...',
+                    title: 'Gagal Daftar',
                     text: msg,
-                    confirmButtonColor: '#FF6F61'
+                    confirmButtonColor: '#d33'
                 });
             }
         });
 
-        // --- LOGIKA LOGIN & ROUTING ---
-        const loginForm = document.getElementById('loginForm');
-        loginForm.addEventListener('submit', (e) => {
+        // --- FUNGSI LOGIN ---
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
+            // Loading
+            Swal.fire({
+                title: 'Masuk...',
+                timerProgressBar: true,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
             signInWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
-                    const user = userCredential.user;
-                    
                     Swal.fire({
                         icon: 'success',
-                        title: 'Login Berhasil!',
-                        text: 'Mengalihkan ke halaman utama...',
+                        title: 'Hai, ' + (userCredential.user.displayName || 'Kawan'),
+                        text: 'Selamat datang kembali!',
                         timer: 1500,
                         showConfirmButton: false
                     }).then(() => {
-                        // LOGIKA ROUTING BERDASARKAN DOMAIN
+                        // Routing
                         if (email.endsWith('@ac.id')) {
-                            // Masuk ke Halaman Admin
                             window.location.href = "admin/index.html"; 
                         } else {
-                            // Masuk ke Halaman User (Remaja)
                             window.location.href = "dashboard/index.html";
                         }
                     });
@@ -361,44 +360,41 @@
                 .catch((error) => {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Gagal Masuk',
-                        text: 'Email atau password salah. Coba lagi ya!',
-                        confirmButtonColor: '#FF6F61'
+                        title: 'Tidak Bisa Masuk',
+                        text: 'Email atau Password mungkin salah.',
+                        confirmButtonColor: '#d33'
                     });
                 });
         });
 
-        // --- LOGIKA LUPA PASSWORD ---
-        const forgotForm = document.getElementById('forgotForm');
-        forgotForm.addEventListener('submit', (e) => {
+        // --- FUNGSI RESET PASS ---
+        document.getElementById('forgotForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('forgotEmail').value;
+
+            Swal.fire({
+                title: 'Mengirim...',
+                didOpen: () => { Swal.showLoading(); }
+            });
 
             sendPasswordResetEmail(auth, email)
                 .then(() => {
                     Swal.fire({
-                        icon: 'info',
-                        title: 'Cek Emailmu',
-                        text: 'Kami sudah mengirimkan link reset password. Cek inbox/spam ya.',
-                        confirmButtonColor: '#FF6F61'
-                    }).then(() => {
-                        showLogin();
-                    });
+                        icon: 'success',
+                        title: 'Terkirim!',
+                        text: 'Cek kotak masuk/spam email kamu ya.',
+                        confirmButtonColor: '#2196F3'
+                    }).then(() => showLogin());
                 })
                 .catch((error) => {
                     Swal.fire({
                         icon: 'error',
                         title: 'Gagal',
-                        text: 'Email tidak ditemukan atau terjadi kesalahan.',
-                        confirmButtonColor: '#FF6F61'
+                        text: 'Email tidak ditemukan.',
+                        confirmButtonColor: '#d33'
                     });
                 });
         });
-
-        // --- CEK LOGO (FUTURE PROOF) ---
-        // Nanti di sini kita akan tambahkan kode untuk mengambil URL logo 
-        // dari node 'settings/logoUrl' di Firebase. 
-        // Saat ini pakai gambar static dulu.
 
     </script>
 </body>
