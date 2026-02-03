@@ -1,127 +1,4 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lapor Bacaan</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            --primary-blue: #1565C0;
-            --light-bg: #E3F2FD;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--light-bg);
-            padding-bottom: 30px;
-        }
-
-        /* HEADER */
-        .page-header {
-            background: linear-gradient(135deg, #1565C0, #42A5F5);
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            color: white;
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
-            box-shadow: 0 4px 15px rgba(21, 101, 192, 0.2);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .btn-back { color: white; font-size: 1.2rem; background: none; border: none; }
-        .page-title { flex-grow: 1; text-align: center; font-weight: 700; font-size: 1.1rem; margin-right: 20px; }
-
-        /* FORM CARD */
-        .form-card {
-            background: white;
-            margin: 20px;
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-
-        .form-label { font-weight: 600; font-size: 0.9rem; color: #555; }
-        .form-control {
-            border-radius: 10px;
-            padding: 12px;
-            border: 1px solid #ddd;
-            background: #f9f9f9;
-            font-size: 0.9rem;
-        }
-        .form-control:focus {
-            border-color: var(--primary-blue);
-            background: white;
-            box-shadow: none;
-        }
-
-        .btn-submit {
-            width: 100%;
-            background: var(--primary-blue);
-            color: white;
-            font-weight: 600;
-            padding: 12px;
-            border-radius: 12px;
-            border: none;
-            margin-top: 10px;
-            box-shadow: 0 4px 10px rgba(21, 101, 192, 0.3);
-        }
-
-        .info-box {
-            background-color: #FFF3E0;
-            border-left: 4px solid #FFB74D;
-            padding: 15px;
-            margin: 20px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            color: #E65100;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="page-header">
-        <button onclick="window.location.href='index.html'" class="btn-back"><i class="fas fa-arrow-left"></i></button>
-        <div class="page-title">Lapor Bacaan</div>
-    </div>
-
-    <div class="info-box">
-        <i class="fas fa-info-circle me-2"></i>
-        Isi formulir ini setelah kamu selesai membaca buku di TBM. Kamu akan dapat <strong>+50 XP</strong> setelah admin menyetujui laporanmu!
-    </div>
-
-    <div class="form-card">
-        <form id="laporForm">
-            <div class="mb-3">
-                <label class="form-label">Judul Buku</label>
-                <input type="text" id="judulBuku" class="form-control" placeholder="Contoh: Laskar Pelangi" required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Tanggal Baca</label>
-                <input type="date" id="tglBaca" class="form-control" required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Ringkasan Cerita (Minimal 3 Kalimat)</label>
-                <textarea id="ringkasan" class="form-control" rows="5" placeholder="Buku ini menceritakan tentang..." required></textarea>
-            </div>
-
-            <button type="submit" class="btn-submit">
-                KIRIM LAPORAN <i class="fas fa-paper-plane ms-2"></i>
-            </button>
-        </form>
-    </div>
-
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, push, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -139,77 +16,48 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
+        let currentUser = null, userData = {};
 
-        let currentUser = null;
-        let userData = {};
-
-        // Cek Login & Ambil Nama User
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                // Ambil data detail user (nama lengkap)
-                get(ref(db, 'users/' + user.uid)).then(snap => {
-                    userData = snap.val();
-                });
-            } else {
-                window.location.href = "../index.html";
-            }
+                get(ref(db, 'users/' + user.uid)).then(s => userData = s.val());
+            } else window.location.href = "../index.html";
         });
 
-        // Set Tanggal Hari Ini Default
         document.getElementById('tglBaca').valueAsDate = new Date();
 
-        // Submit Form
-        document.getElementById('laporForm').addEventListener('submit', (e) => {
+        document.getElementById('laporForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
             if(!currentUser) return;
-
+            
             const judul = document.getElementById('judulBuku').value;
-            const tgl = document.getElementById('tglBaca').value;
             const ringkasan = document.getElementById('ringkasan').value;
 
-            // Validasi Sederhana
-            if(ringkasan.length < 20) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Terlalu Pendek',
-                    text: 'Ceritakan sedikit lebih banyak ya biar admin percaya!',
-                    confirmButtonColor: '#1565C0'
+            Swal.fire({title:'Mengirim...', didOpen:()=>Swal.showLoading()});
+
+            try {
+                // 1. Kirim Laporan ke Admin
+                await push(ref(db, 'reports'), {
+                    uid: currentUser.uid,
+                    userName: userData.fullName || currentUser.displayName,
+                    bookTitle: judul,
+                    date: document.getElementById('tglBaca').value,
+                    summary: ringkasan,
+                    status: 'pending',
+                    timestamp: Date.now()
                 });
-                return;
+
+                // 2. CATAT LOG DI DASHBOARD (Langsung muncul "Mengirim Laporan")
+                await push(ref(db, `logs/${currentUser.uid}`), {
+                    activity: "Mengirim Laporan Baca",
+                    points: 0, // Poin 0 dulu karena belum di-acc
+                    date: new Date().toLocaleDateString('id-ID')
+                });
+
+                Swal.fire('Terkirim!', 'Tunggu verifikasi admin ya.', 'success').then(() => window.location.href = 'index.html');
+            } catch(err) {
+                Swal.fire('Gagal', err.message, 'error');
             }
-
-            // Loading Toast
-            const Toast = Swal.mixin({
-                toast: true, position: 'top', showConfirmButton: false, timer: 3000
-            });
-            Toast.fire({ icon: 'info', title: 'Mengirim laporan...' });
-
-            // Kirim ke Firebase
-            const newReportRef = push(ref(db, 'reports'));
-            set(newReportRef, {
-                uid: currentUser.uid,
-                userName: userData.fullName || currentUser.displayName,
-                bookTitle: judul,
-                date: tgl,
-                summary: ringkasan,
-                status: 'pending', // Status menunggu admin
-                timestamp: Date.now()
-            }).then(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Terkirim!',
-                    text: 'Laporanmu sedang diperiksa Admin. Tunggu poinnya masuk ya!',
-                    confirmButtonColor: '#1565C0'
-                }).then(() => {
-                    window.location.href = 'index.html';
-                });
-            }).catch((err) => {
-                console.error(err);
-                Swal.fire('Gagal', 'Terjadi kesalahan jaringan.', 'error');
-            });
         });
     </script>
-</body>
-</html>
