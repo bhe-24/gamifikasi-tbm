@@ -135,11 +135,11 @@
 
     <div class="footer-text">&copy; 2026 TBM Digital</div>
 
-    <script type="module">
+  <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // 1. CONFIG FIREBASE (WAJIB SERVER SINGAPURA)
+        // CONFIG SERVER SINGAPURA
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -153,82 +153,59 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // VARIABEL GLOBAL UNTUK MENAMPUNG DATA
-        let rawBooks = []; // Buku dari Admin
-        let rawWorks = []; // Karya dari User
-        let combinedData = []; // Gabungan keduanya
+        let rawBooks = [];
+        let rawWorks = []; 
+        let combinedData = [];
 
-        // 2. LOAD SETTINGS (Banner)
         onValue(ref(db, 'settings'), snap => {
-            if(snap.val() && snap.val().bannerBacaUrl) {
-                document.getElementById('bannerImg').src = snap.val().bannerBacaUrl;
-            } else {
-                document.getElementById('bannerImg').src = "https://placehold.co/600x200/CE93D8/ffffff?text=Selamat+Membaca";
-            }
+            if(snap.val() && snap.val().bannerBacaUrl) document.getElementById('bannerImg').src = snap.val().bannerBacaUrl;
         });
 
-        // 3. LISTENER 1: LOAD BUKU ADMIN
+        // LOAD BUKU ADMIN
         onValue(ref(db, 'books'), snap => {
-            rawBooks = []; // Reset
+            rawBooks = [];
             if(snap.exists()) {
-                snap.forEach(c => {
-                    rawBooks.push({
-                        type: 'book', // Penanda ini buku admin
-                        id: c.key,
-                        ...c.val()
-                    });
-                });
+                snap.forEach(c => rawBooks.push({type: 'book', id: c.key, ...c.val()}));
             }
-            mergeAndRender(); // Panggil fungsi gabung
+            mergeAndRender();
         });
 
-        // 4. LISTENER 2: LOAD KARYA USER (Hanya yang status 'published')
+        // LOAD KARYA WARGA
         onValue(ref(db, 'works'), snap => {
-            rawWorks = []; // Reset
+            rawWorks = [];
             if(snap.exists()) {
                 snap.forEach(c => {
                     const val = c.val();
                     if(val.status === 'published') {
-                        // Kita beri cover default karena user tidak upload cover
-                        const defCover = "https://placehold.co/130x190/FB8C00/ffffff?text=" + (val.category || 'Karya');
-                        
                         rawWorks.push({
-                            type: 'work', // Penanda ini karya user
+                            type: 'work',
                             id: c.key,
                             title: val.title,
-                            author: val.authorName, // Nama User
-                            category: "Karya Warga", // Kita masukkan ke kategori khusus
-                            coverUrl: defCover, 
+                            author: val.authorName, 
+                            category: "Karya Warga", 
+                            coverUrl: "https://placehold.co/130x190/FB8C00/ffffff?text=Karya", 
                             content: val.content
                         });
                     }
                 });
             }
-            mergeAndRender(); // Panggil fungsi gabung
+            mergeAndRender();
         });
 
-        // 5. FUNGSI PENGGABUNG & RENDER
         function mergeAndRender() {
-            // Gabungkan kedua array
             combinedData = [...rawBooks, ...rawWorks];
             renderContent(combinedData);
         }
 
-        // 6. FUNGSI RENDER HTML
         function renderContent(items) {
             const container = document.getElementById('contentArea');
-            container.innerHTML = ''; // Bersihkan loader
+            container.innerHTML = '';
 
             if (items.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center p-5 text-muted">
-                        <i class="fas fa-book-open fa-3x mb-3" style="opacity:0.3"></i><br>
-                        Belum ada buku tersedia.
-                    </div>`;
+                container.innerHTML = '<div class="text-center p-5 text-muted">Belum ada bacaan.</div>';
                 return;
             }
 
-            // Kelompokkan Data Berdasarkan Kategori
             const categories = {};
             items.forEach(item => {
                 const catName = item.category || "Umum";
@@ -236,52 +213,48 @@
                 categories[catName].push(item);
             });
 
-            // Loop Setiap Kategori -> Buat HTML
             Object.keys(categories).forEach(cat => {
                 const itemsInCat = categories[cat];
                 let itemsHtml = '';
 
                 itemsInCat.forEach(b => {
-                    // PENTING: Untuk ID Karya Warga, kita tambah prefix "WORK_"
-                    // Agar nanti di preview-buku.html kita tahu harus ambil data dari tabel mana
-                    const linkId = (b.type === 'work') ? `WORK_${b.id}` : b.id;
+                    // --- LOGIKA UTAMA DI SINI ---
+                    // Jika Tipe BUKU -> Ke Preview
+                    // Jika Tipe KARYA -> Langsung Baca (baca.html) dengan kode WORK_
+                    let onClickAction = "";
+                    
+                    if(b.type === 'book') {
+                        onClickAction = `window.location.href='preview-buku.html?id=${b.id}'`;
+                    } else {
+                        // Langsung ke baca.html, kasih tanda "WORK_" di depan ID
+                        onClickAction = `window.location.href='baca.html?id=WORK_${b.id}'`;
+                    }
 
                     itemsHtml += `
-                        <div class="book-card" onclick="window.location.href='preview-buku.html?id=${linkId}'">
-                            <img src="${b.coverUrl}" class="book-cover" onerror="this.src='https://placehold.co/130x190?text=No+Cover'">
+                        <div class="book-card" onclick="${onClickAction}">
+                            <img src="${b.coverUrl}" class="book-cover" onerror="this.src='https://placehold.co/130x190?text=Cover'">
                             <div class="book-title">${b.title}</div>
                             <div class="book-author">${b.author}</div>
                         </div>
                     `;
                 });
 
-                // Masukkan Section ke Container
                 container.innerHTML += `
                     <div class="category-section">
                         <div class="cat-title">${cat} <span class="badge bg-light text-dark border ms-1" style="font-size:0.7rem">${itemsInCat.length}</span></div>
-                        <div class="book-scroller">
-                            ${itemsHtml}
-                        </div>
+                        <div class="book-scroller">${itemsHtml}</div>
                     </div>
                 `;
             });
         }
 
-        // 7. FITUR PENCARIAN (Real-time Filter)
         document.getElementById('searchInput').addEventListener('input', (e) => {
-            const keyword = e.target.value.toLowerCase();
-            
-            // Filter dari array gabungan (combinedData)
-            const filteredItems = combinedData.filter(item => {
-                const t = (item.title || "").toLowerCase();
-                const a = (item.author || "").toLowerCase();
-                return t.includes(keyword) || a.includes(keyword);
-            });
-
-            // Render ulang hasil filter
-            renderContent(filteredItems);
+            const key = e.target.value.toLowerCase();
+            const filtered = combinedData.filter(item => 
+                (item.title||"").toLowerCase().includes(key) || (item.author||"").toLowerCase().includes(key)
+            );
+            renderContent(filtered);
         });
-
     </script>
 </body>
 </html>
