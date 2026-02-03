@@ -4,104 +4,98 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sedang Membaca</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #fdfdfd; /* Kertas putih gading */
-            color: #333;
+            margin: 0; padding: 0;
+            background-color: #FAF9F6; /* Warna Kertas Gading */
+            color: #2c2c2c;
             transition: background 0.3s, color 0.3s;
         }
 
-        /* Sticky Top Bar Minimalis */
-        .reader-nav {
-            position: sticky;
-            top: 0;
-            background: rgba(255,255,255,0.95);
+        /* HEADER BACA */
+        .reader-header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(250, 249, 246, 0.95);
+            border-bottom: 1px solid #ddd;
             padding: 10px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eee;
-            z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
         }
 
-        .reader-title {
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.8rem;
-            font-weight: 600;
-            max-width: 60%;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        .book-info { font-family: 'Poppins', sans-serif; font-size: 0.85rem; font-weight: 600; max-width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .btn-icon {
-            background: none; border: none; font-size: 1.2rem; color: #555; cursor: pointer;
-        }
-
-        /* Area Konten */
+        /* AREA KONTEN */
         .content-area {
-            max-width: 650px; /* Lebar optimal untuk mata */
-            margin: 0 auto;
-            padding: 30px 20px 80px 20px;
+            max-width: 700px; margin: 0 auto;
+            padding: 30px 20px 100px 20px;
             font-family: 'Lora', serif; /* Font Novel */
-            font-size: 18px; /* Ukuran font nyaman */
-            line-height: 1.8; /* Jarak antar baris lega */
-            text-align: justify;
-        }
-
-        .content-area p { margin-bottom: 1.5em; }
-
-        /* Mode Gelap (Opsional, diaktifkan via JS nanti) */
-        body.dark-mode { background-color: #222; color: #ddd; }
-        body.dark-mode .reader-nav { background: rgba(34,34,34,0.95); border-bottom: 1px solid #444; }
-        body.dark-mode .btn-icon { color: #aaa; }
-
-        /* Tombol Selesai di Bawah */
-        .finish-area {
-            text-align: center;
-            margin-top: 40px;
-            padding: 20px;
-            border-top: 1px solid #eee;
+            font-size: 18px; line-height: 1.8; text-align: justify;
         }
         
-        .btn-finish {
-            background-color: #D8BFD8;
-            color: white;
-            padding: 10px 30px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
+        /* Dark Mode */
+        body.dark-mode { background-color: #222; color: #ccc; }
+        body.dark-mode .reader-header { background: rgba(34,34,34,0.95); border-color: #444; }
+
+        /* TIMER XP PROGRESS RING */
+        .timer-container {
+            position: relative; width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .xp-label {
+            position: absolute; font-size: 0.6rem; font-weight: 900; 
+            font-family: 'Poppins', sans-serif; color: #FB8C00;
+        }
+
+        /* SVG Circle Animation */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 1s linear;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
         }
     </style>
 </head>
 <body>
 
-    <div class="reader-nav">
-        <button class="btn-icon" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
-        <span class="reader-title" id="rTitle">Memuat Judul...</span>
-        <button class="btn-icon" onclick="toggleTheme()"><i class="fas fa-adjust"></i></button>
+    <div class="reader-header">
+        <i class="fas fa-arrow-left" onclick="history.back()" style="font-size:1.2rem; cursor:pointer; color:#555;"></i>
+        <div class="book-info" id="rTitle">Memuat...</div>
+        
+        <div class="d-flex align-items-center gap-3">
+            <i class="fas fa-adjust" onclick="toggleTheme()" style="cursor:pointer; color:#555;"></i>
+            
+            <div class="timer-container">
+                <svg width="36" height="36">
+                    <circle stroke="#ddd" stroke-width="3" fill="transparent" r="16" cx="18" cy="18"/>
+                    <circle 
+                        id="progressRing"
+                        class="progress-ring__circle"
+                        stroke="#FB8C00" 
+                        stroke-width="3" 
+                        fill="transparent" 
+                        r="16" cx="18" cy="18"
+                        stroke-dasharray="100.5" 
+                        stroke-dashoffset="100.5"
+                    />
+                </svg>
+                <div class="xp-label">XP</div>
+            </div>
+        </div>
     </div>
 
     <div class="content-area" id="rContent">
-        <p style="text-align:center; color:#999;">Sedang memuat isi buku...</p>
-    </div>
-
-    <div class="finish-area">
-        <p style="font-family:'Poppins', sans-serif; font-size:0.8rem; color:#888;">Kamu sudah di akhir cerita.</p>
-        <a href="javascript:void(0)" onclick="claimPoints()" class="btn-finish">Selesai & Ambil Poin</a>
+        <p style="text-align:center; color:#999; margin-top:50px;">Sedang mengambil halaman...</p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, get, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, get, update, increment, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -115,40 +109,90 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
+        
+        let currentUser = null;
+        let timerSeconds = 0;
+        const XP_INTERVAL = 300; // 5 Menit = 300 detik
+        // const XP_INTERVAL = 10; // DEBUG MODE: 10 Detik (Gunakan ini untuk tes cepat)
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const bookId = urlParams.get('id');
+        // 1. SETUP TIMER VISUAL
+        const circle = document.getElementById('progressRing');
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
 
-        // LOAD BUKU
-        if(bookId) {
-            const bookRef = ref(db, 'books/' + bookId);
-            get(bookRef).then((snapshot) => {
-                if(snapshot.exists()) {
-                    const data = snapshot.val();
-                    document.getElementById('rTitle').innerText = data.title;
-                    
-                    // Render konten. Admin harus input pakai <p> tag biar rapi
-                    // Atau kita bisa bungkus otomatis jika plain text
-                    document.getElementById('rContent').innerHTML = data.content || "<p>Isi buku belum tersedia.</p>";
-                    
-                    // Increment Views (Opsional)
-                    update(bookRef, { views: increment(1) });
-                }
-            });
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = circumference;
+
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
         }
 
-        // FUNGSI GANTI TEMA
+        // 2. LOGIKA TIMER BERJALAN
+        setInterval(() => {
+            if(currentUser) {
+                timerSeconds++;
+                
+                // Hitung Persentase Lingkaran
+                const percentage = (timerSeconds / XP_INTERVAL) * 100;
+                setProgress(percentage);
+
+                // Jika sudah 5 menit (300 detik)
+                if(timerSeconds >= XP_INTERVAL) {
+                    addXP();
+                    timerSeconds = 0; // Reset
+                }
+            }
+        }, 1000); // Jalan tiap 1 detik
+
+        // 3. FUNGSI TAMBAH XP
+        function addXP() {
+            // Update Database
+            update(ref(db, 'users/' + currentUser.uid), { xp: increment(2) });
+            
+            // Opsional: Catat Log (Bisa dimatikan kalau terlalu spam)
+            // push(ref(db, `logs/${currentUser.uid}`), {
+            //     activity: "Membaca Buku (5 Menit)",
+            //     points: 2,
+            //     date: new Date().toLocaleDateString('id-ID')
+            // });
+
+            // Efek Visual Kecil (Toast atau Warna berubah sesaat)
+            const label = document.querySelector('.xp-label');
+            label.style.color = "#4CAF50"; // Hijau
+            label.innerText = "+2";
+            setTimeout(() => { 
+                label.style.color = "#FB8C00"; 
+                label.innerText = "XP";
+            }, 2000);
+        }
+
+        // 4. LOAD KONTEN BUKU
+        onAuthStateChanged(auth, (user) => {
+            if(user) {
+                currentUser = user;
+                const urlParams = new URLSearchParams(window.location.search);
+                const bookId = urlParams.get('id');
+                
+                if(bookId) {
+                    get(ref(db, 'books/' + bookId)).then(snap => {
+                        if(snap.exists()) {
+                            const d = snap.val();
+                            document.getElementById('rTitle').innerText = d.title;
+                            // Convert newline to paragraphs simple
+                            const formatted = d.content.replace(/\n/g, '<br><br>');
+                            document.getElementById('rContent').innerHTML = formatted;
+                        }
+                    });
+                }
+            } else {
+                window.location.href = "../index.html";
+            }
+        });
+
+        // 5. DARK MODE
         window.toggleTheme = () => {
             document.body.classList.toggle('dark-mode');
-        }
-
-        // FUNGSI KLAIM POIN (SEDERHANA DULU)
-        window.claimPoints = () => {
-            // Logic poin akan kita perbaiki nanti agar tidak bisa spam.
-            // Untuk sekarang, kita arahkan kembali ke dashboard
-            alert("Selamat! Kamu selesai membaca."); 
-            // Nanti di sini kita panggil SweetAlert + Update XP Firebase
-            history.back(); // Atau window.location.href = 'index.html';
         }
     </script>
 </body>
