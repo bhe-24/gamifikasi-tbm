@@ -8,35 +8,38 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* CSS CUSTOM - MATCHING THEME */
+        /* CSS CUSTOM - TEMA BIRU FRESH */
         :root {
-            --pastel-blue: #AEC6CF;
-            --pastel-bg: #fdfdfd;
+            --primary-blue: #1565C0; /* Biru Utama */
+            --light-blue-bg: #E3F2FD; /* Latar Belakang Biru Muda */
+            --card-bg: #FFFFFF;
             --gold: #FFD700;
             --silver: #C0C0C0;
             --bronze: #CD7F32;
-            --primary-text: #444;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: var(--pastel-bg);
-            padding-bottom: 70px; /* Ruang untuk footer */
+            background-color: var(--light-blue-bg);
+            /* Padding bawah agar konten tidak ketutup footer fixed */
+            padding-bottom: 80px; 
+            margin: 0;
+            min-height: 100vh;
         }
 
         /* 1. HEADER */
         .dashboard-header {
-            background-color: var(--pastel-blue);
+            background: linear-gradient(135deg, #1565C0, #42A5F5);
             padding: 15px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            box-shadow: 0 4px 15px rgba(21, 101, 192, 0.2);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -45,20 +48,21 @@
         .header-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .header-logo {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             background: white;
             border-radius: 50%;
-            padding: 2px;
+            padding: 3px;
             object-fit: contain;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .header-title {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: white;
             line-height: 1.2;
@@ -80,12 +84,12 @@
 
         /* 2. BANNER */
         .banner-container {
-            margin: 20px;
+            margin: 20px 15px;
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            min-height: 100px; /* Placeholder height */
-            background-color: #f0f0f0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            min-height: 120px;
+            background-color: #bbdefb;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -99,82 +103,84 @@
 
         /* 3. LEADERBOARD */
         .section-title {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 700;
-            color: var(--primary-text);
-            margin: 0 20px 15px 20px;
-            padding-left: 10px;
-            border-left: 4px solid var(--pastel-blue);
+            color: #333;
+            margin: 0 20px 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .leaderboard-card {
-            background: white;
-            margin: 0 20px 20px 20px;
+            background: var(--card-bg);
+            margin: 0 15px 20px 15px;
             padding: 15px;
             border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
 
         .top-user {
             display: flex;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             padding: 10px;
-            border-radius: 10px;
-            background: #f9f9f9;
+            border-radius: 12px;
+            background: #F8F9FA;
             transition: transform 0.2s;
         }
 
-        .top-user.rank-1 { background: linear-gradient(90deg, #fff9db, #fff); border: 1px solid var(--gold); }
-        .top-user.rank-2 { background: linear-gradient(90deg, #f0f0f0, #fff); border: 1px solid var(--silver); }
-        .top-user.rank-3 { background: linear-gradient(90deg, #fff0e0, #fff); border: 1px solid var(--bronze); }
+        .top-user:last-child { margin-bottom: 0; }
 
         .rank-badge {
-            width: 25px;
-            height: 25px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            font-weight: bold;
-            font-size: 0.8rem;
-            margin-right: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-right: 12px;
             color: white;
+            background-color: #90CAF9; /* Default rank 4+ */
         }
         
-        .rank-1 .rank-badge { background-color: var(--gold); }
+        .rank-1 .rank-badge { background-color: var(--gold); box-shadow: 0 2px 5px rgba(255, 215, 0, 0.4); }
         .rank-2 .rank-badge { background-color: var(--silver); }
         .rank-3 .rank-badge { background-color: var(--bronze); }
 
         .user-lb-img {
-            width: 35px;
-            height: 35px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
-            margin-right: 10px;
+            margin-right: 12px;
             object-fit: cover;
+            border: 1px solid #eee;
         }
 
         .user-lb-info { flex-grow: 1; }
-        .user-lb-name { font-size: 0.9rem; font-weight: 600; color: #333; display: block; }
-        .user-lb-points { font-size: 0.8rem; color: var(--pastel-blue); font-weight: 700; }
+        .user-lb-name { font-size: 0.9rem; font-weight: 600; color: #444; display: block; }
+        .user-lb-points { font-size: 0.8rem; color: var(--primary-blue); font-weight: 700; }
 
+        /* Posisi User Sendiri */
         .my-rank-bar {
-            background: var(--pastel-blue);
+            background: var(--primary-blue);
             color: white;
-            margin: 0 20px 20px 20px;
-            padding: 10px 15px;
-            border-radius: 12px;
+            margin: 0 15px 25px 15px;
+            padding: 12px 20px;
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 4px 10px rgba(174, 198, 207, 0.5);
+            box-shadow: 0 5px 15px rgba(21, 101, 192, 0.3);
         }
 
         /* 4. MENU GRID (4 Tombol) */
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            gap: 12px;
             margin: 0 15px 25px 15px;
         }
 
@@ -191,17 +197,17 @@
             width: 55px;
             height: 55px;
             background: white;
-            border-radius: 15px;
+            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             margin-bottom: 8px;
             box-shadow: 0 3px 8px rgba(0,0,0,0.05);
-            transition: transform 0.1s;
+            transition: transform 0.1s, background-color 0.2s;
         }
         
-        .menu-item:active .menu-icon-box { transform: scale(0.9); }
+        .menu-item:active .menu-icon-box { transform: scale(0.95); background-color: #f0f0f0; }
         
         .menu-label {
             font-size: 0.7rem;
@@ -210,33 +216,42 @@
         }
 
         /* 5. HISTORY */
-        .history-list {
-            margin: 0 20px;
-        }
+        .history-list { margin: 0 15px; }
         
         .history-item {
             background: white;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            padding: 12px 15px;
+            border-radius: 12px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             border-left: 4px solid #eee;
         }
 
-        .history-item.positive { border-left-color: #77dd77; } /* Hijau Pastel */
+        .history-item.positive { border-left-color: #4CAF50; } 
 
-        /* FOOTER */
+        /* FOOTER FIXED (TERKUNCI DI BAWAH) */
         .app-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
             text-align: center;
-            font-size: 0.7rem;
-            color: #999;
-            margin-top: 30px;
-            padding-bottom: 20px;
+            font-size: 0.75rem;
+            color: #888;
+            padding: 10px 0;
+            border-top: 1px solid #eee;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 999;
         }
         
-        .app-footer a { color: var(--pastel-blue); text-decoration: none; }
+        .app-footer a { 
+            color: var(--primary-blue); 
+            text-decoration: none; 
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -252,69 +267,70 @@
     </header>
 
     <div class="banner-container">
-        <img src="https://placehold.co/600x200/AEC6CF/ffffff?text=Selamat+Datang+di+TBM+Digital!" alt="Banner" class="banner-img" id="dynamicBanner">
+        <img src="https://placehold.co/600x200/90CAF9/ffffff?text=Selamat+Datang!" alt="Banner" class="banner-img" id="dynamicBanner">
     </div>
 
-    <h3 class="section-title">🏆 Top Pembaca Minggu Ini</h3>
+    <h3 class="section-title"><i class="fas fa-trophy text-warning"></i> Top Pembaca Hari Ini</h3>
     <div class="leaderboard-card" id="topThreeContainer">
-        <div class="text-center text-muted small">Memuat peringkat...</div>
+        <div class="text-center text-muted small py-3">
+            <i class="fas fa-spinner fa-spin"></i> Memuat data...
+        </div>
     </div>
 
     <div class="my-rank-bar" id="myRankContainer">
         <div class="d-flex align-items-center">
-            <img src="https://i.ibb.co/5r2M63R/person-placeholder.png" class="user-lb-img" id="myRankPic">
+            <img src="https://i.ibb.co/5r2M63R/person-placeholder.png" class="user-lb-img" id="myRankPic" style="border:none;">
             <div>
-                <span style="font-size: 0.8rem; display:block;">Peringkatmu:</span>
-                <span style="font-weight:bold;" id="myRankName">Memuat...</span>
+                <span style="font-size: 0.75rem; display:block; opacity:0.9;">Peringkatmu:</span>
+                <span style="font-weight:bold; font-size:0.95rem;" id="myRankName">User</span>
             </div>
         </div>
-        <div style="font-size: 1.2rem; font-weight:bold;" id="myRankPoints">0 XP</div>
+        <div style="font-size: 1.1rem; font-weight:bold;" id="myRankPoints">0 XP</div>
     </div>
 
     <div class="menu-grid">
         <a href="baca-online.html" class="menu-item">
-            <div class="menu-icon-box" style="color: #FF6F61;">
+            <div class="menu-icon-box" style="color: #1565C0;">
                 <i class="fas fa-book-open"></i>
             </div>
             <span class="menu-label">Baca<br>Online</span>
         </a>
 
         <a href="laporan.html" class="menu-item">
-            <div class="menu-icon-box" style="color: #77dd77;">
+            <div class="menu-icon-box" style="color: #43A047;">
                 <i class="fas fa-edit"></i>
             </div>
             <span class="menu-label">Lapor<br>Buku</span>
         </a>
 
         <a href="form-cerita.html" class="menu-item">
-            <div class="menu-icon-box" style="color: #AEC6CF;">
+            <div class="menu-icon-box" style="color: #FB8C00;">
                 <i class="fas fa-pen-nib"></i>
             </div>
             <span class="menu-label">Kirim<br>Karya</span>
         </a>
 
         <a href="hadiah.html" class="menu-item">
-            <div class="menu-icon-box" style="color: #ffb3ba;">
+            <div class="menu-icon-box" style="color: #E91E63;">
                 <i class="fas fa-gift"></i>
             </div>
             <span class="menu-label">Tukar<br>Poin</span>
         </a>
     </div>
 
-    <h3 class="section-title">🕒 Aktivitas Minggu Ini</h3>
+    <h3 class="section-title"><i class="fas fa-history text-secondary"></i> Aktivitas Terbaru</h3>
     <div class="history-list" id="historyContainer">
         <div class="text-center text-muted small py-3">Belum ada aktivitas.</div>
     </div>
 
     <div class="app-footer">
-        &copy; 2026 TBM Digital.<br>
-        <a href="../privacy.html">Kebijakan Privasi</a>
+        &copy; 2026 TBM Digital. <a href="../privacy.html">Kebijakan Privasi</a>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
@@ -329,76 +345,81 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // 1. CEK STATUS LOGIN
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // User login, load data
                 loadUserProfile(user.uid);
-                loadLeaderboard(user.uid); // Pass UID untuk highlight posisi user
+                loadLeaderboard(user.uid);
                 loadUserHistory(user.uid);
-                loadSettings(); // Load banner & logo global
+                loadSettings(); 
             } else {
-                // Tidak login, tendang ke halaman depan
                 window.location.href = "../index.html";
             }
         });
 
-        // 2. LOAD USER PROFILE DATA (Header & MyRank)
+        // LOAD DATA PROFIL & MY RANK BAR
         function loadUserProfile(uid) {
             const userRef = ref(db, 'users/' + uid);
             onValue(userRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    // Update Header
                     const defaultPic = "https://i.ibb.co/5r2M63R/person-placeholder.png";
                     document.getElementById('userProfilePic').src = data.profilePic || defaultPic;
-                    
-                    // Update My Rank Bar (Nama & Poin)
-                    document.getElementById('myRankName').innerText = data.username || "User";
+                    document.getElementById('myRankName').innerText = data.username || data.fullName || "User";
                     document.getElementById('myRankPic').src = data.profilePic || defaultPic;
                     document.getElementById('myRankPoints').innerText = (data.xp || 0) + " XP";
                 }
             });
         }
 
-        // 3. LOAD LEADERBOARD (Otomatis & Realtime)
+        // LOAD LEADERBOARD (Tetap muncul walau cuma 1 user)
         function loadLeaderboard(currentUid) {
             const usersRef = ref(db, 'users');
-            // Ambil semua user
             onValue(usersRef, (snapshot) => {
-                const users = [];
+                const container = document.getElementById('topThreeContainer');
+                container.innerHTML = ''; 
+
+                if (!snapshot.exists()) {
+                    container.innerHTML = '<div class="text-center small py-2">Belum ada data.</div>';
+                    return;
+                }
+
+                let users = [];
                 snapshot.forEach((childSnapshot) => {
+                    const u = childSnapshot.val();
                     users.push({
                         uid: childSnapshot.key,
-                        ...childSnapshot.val()
+                        username: u.username || u.fullName || "User",
+                        xp: u.xp || 0,
+                        profilePic: u.profilePic || "https://i.ibb.co/5r2M63R/person-placeholder.png"
                     });
                 });
 
-                // Urutkan berdasarkan XP (Tertinggi ke Terendah)
-                users.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+                // Urutkan Poin Tertinggi
+                users.sort((a, b) => b.xp - a.xp);
 
-                // A. Render Top 3
-                const top3 = users.slice(0, 3);
-                const container = document.getElementById('topThreeContainer');
-                container.innerHTML = ''; // Reset
+                // Tampilkan Top 3 (atau berapapun yang ada)
+                const displayCount = Math.min(users.length, 3);
+                
+                for(let i = 0; i < displayCount; i++) {
+                    const u = users[i];
+                    const rankClass = i === 0 ? 'rank-1' : (i === 1 ? 'rank-2' : 'rank-3');
+                    const crown = i === 0 ? '<i class="fas fa-crown text-warning ms-auto"></i>' : '';
 
-                top3.forEach((u, index) => {
-                    const defaultPic = "https://i.ibb.co/5r2M63R/person-placeholder.png";
                     const html = `
-                        <div class="top-user rank-${index + 1}">
-                            <div class="rank-badge">${index + 1}</div>
-                            <img src="${u.profilePic || defaultPic}" class="user-lb-img">
+                        <div class="top-user ${rankClass}">
+                            <div class="rank-badge">${i + 1}</div>
+                            <img src="${u.profilePic}" class="user-lb-img">
                             <div class="user-lb-info">
-                                <span class="user-lb-name">${u.username || "Tanpa Nama"}</span>
-                                <span class="user-lb-points">${u.xp || 0} XP</span>
+                                <span class="user-lb-name">${u.username}</span>
+                                <span class="user-lb-points">${u.xp} XP</span>
                             </div>
-                            ${index === 0 ? '<i class="fas fa-crown text-warning"></i>' : ''}
+                            ${crown}
                         </div>
                     `;
                     container.innerHTML += html;
-                });
+                }
 
-                // B. Cari Posisi User Sendiri
+                // Cari Posisi User Sendiri
                 const myIndex = users.findIndex(u => u.uid === currentUid);
                 if (myIndex !== -1) {
                     document.getElementById('myRankName').innerText = `${users[myIndex].username} (#${myIndex + 1})`;
@@ -406,55 +427,48 @@
             });
         }
 
-        // 4. LOAD SETTINGS (Banner & Logo Global)
+        // LOAD SETTINGS (Banner/Logo)
         function loadSettings() {
-            const settingsRef = ref(db, 'settings');
-            onValue(settingsRef, (snapshot) => {
+            onValue(ref(db, 'settings'), (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    if (data.bannerUrl) {
-                        document.getElementById('dynamicBanner').src = data.bannerUrl;
-                    }
-                    if (data.logoUrl) {
-                        document.getElementById('headerLogo').src = data.logoUrl;
-                    }
+                    if (data.bannerUrl) document.getElementById('dynamicBanner').src = data.bannerUrl;
+                    if (data.logoUrl) document.getElementById('headerLogo').src = data.logoUrl;
                 }
             });
         }
 
-        // 5. LOAD HISTORY (Mingguan)
+        // LOAD HISTORY
         function loadUserHistory(uid) {
-            // Asumsi struktur DB: logs/{uid}/{logId}
             const logsRef = ref(db, `logs/${uid}`);
-            const logsQuery = query(logsRef, limitToLast(7)); // Ambil 7 aktivitas terakhir
+            const logsQuery = query(logsRef, limitToLast(5)); // Ambil 5 terakhir
 
             onValue(logsQuery, (snapshot) => {
                 const container = document.getElementById('historyContainer');
-                if (!snapshot.exists()) return;
+                if (!snapshot.exists()) {
+                    container.innerHTML = '<div class="text-center text-muted small py-3">Belum ada aktivitas hari ini.</div>';
+                    return;
+                }
 
                 const logs = [];
                 snapshot.forEach(c => logs.push(c.val()));
-                // Reverse biar yang terbaru di atas
-                logs.reverse(); 
+                logs.reverse(); // Terbaru diatas
 
                 container.innerHTML = '';
                 logs.forEach(log => {
-                    // Cek tanggal, jika lebih dari 7 hari skip (opsional logic JS)
-                    
                     const html = `
                         <div class="history-item positive">
                             <div>
-                                <div style="font-weight:600; font-size:0.9rem;">${log.activity || "Aktivitas"}</div>
-                                <div style="font-size:0.75rem; color:#888;">${log.date || "Baru saja"}</div>
+                                <div style="font-weight:600; font-size:0.85rem;">${log.activity || "Aktivitas"}</div>
+                                <div style="font-size:0.7rem; color:#888;">${log.date || ""}</div>
                             </div>
-                            <div style="font-weight:bold; color:var(--pastel-blue);">+${log.points || 0} XP</div>
+                            <div style="font-weight:bold; color:var(--primary-blue); font-size:0.85rem;">+${log.points || 0} XP</div>
                         </div>
                     `;
                     container.innerHTML += html;
                 });
             });
         }
-
     </script>
 </body>
 </html>
