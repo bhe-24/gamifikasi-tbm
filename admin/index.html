@@ -12,9 +12,8 @@
 
     <style>
         :root {
-            --admin-primary: #0D47A1; /* Biru Tua */
+            --admin-primary: #0D47A1;
             --admin-light: #E3F2FD;
-            --admin-card: #FFFFFF;
         }
 
         body {
@@ -24,103 +23,85 @@
             margin: 0;
         }
 
-        /* HEADER */
+        /* HEADER YANG LEBIH RAPI */
         .admin-header {
             background: linear-gradient(135deg, #0D47A1, #1565C0);
-            padding: 20px;
+            /* Padding bawah agak besar untuk memberi ruang kartu stats melayang */
+            padding: 20px 20px 60px 20px; 
             border-bottom-left-radius: 30px;
             border-bottom-right-radius: 30px;
             color: white;
             box-shadow: 0 4px 15px rgba(13, 71, 161, 0.3);
             text-align: center;
             position: relative;
+            z-index: 1;
         }
 
-        .header-title { font-weight: 700; font-size: 1.2rem; margin-top: 10px; }
-        .header-subtitle { font-size: 0.8rem; opacity: 0.8; }
-        
-        .btn-logout {
-            position: absolute; top: 20px; right: 20px;
-            background: rgba(255,255,255,0.2); border: none;
-            color: white; width: 35px; height: 35px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
+        .header-top {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
         }
 
-        /* STATS CARD (RINGKASAN) */
+        .header-title { font-weight: 700; font-size: 1.3rem; line-height: 1.2; }
+        .header-subtitle { font-size: 0.85rem; opacity: 0.9; }
+
+        /* STATS CARD (POSITION FIX) */
         .stats-container {
-            display: flex; gap: 15px; margin: -25px 20px 20px 20px;
+            display: flex; gap: 15px; 
+            /* Margin negatif agar naik ke atas header */
+            margin: -40px 20px 20px 20px; 
+            position: relative;
+            z-index: 10; /* Pastikan di atas header */
         }
+
         .stat-card {
             flex: 1; background: white; padding: 15px; border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); text-align: center;
         }
-        .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--admin-primary); }
-        .stat-label { font-size: 0.7rem; color: #666; }
+        .stat-num { font-size: 1.4rem; font-weight: 700; color: var(--admin-primary); }
+        .stat-label { font-size: 0.75rem; color: #666; font-weight: 600; }
 
-        /* MENU GRID ADMIN */
+        /* MENU GRID */
         .admin-menu-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 2 Kolom biar besar di HP */
-            gap: 15px;
-            padding: 0 20px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px; padding: 0 20px; margin-bottom: 20px;
         }
 
         .admin-menu-item {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-decoration: none;
-            color: #444;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-            aspect-ratio: 1/1; /* Kotak Persegi */
+            background: white; padding: 20px; border-radius: 15px;
+            text-decoration: none; color: #444;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); aspect-ratio: 1/1;
         }
+        .menu-icon { font-size: 1.8rem; margin-bottom: 10px; color: var(--admin-primary); }
+        .menu-label { font-weight: 600; font-size: 0.85rem; text-align: center; }
 
-        .admin-menu-item:active { transform: scale(0.96); }
-
-        .menu-icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            color: var(--admin-primary);
-        }
-
-        .menu-label {
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-
-        /* LABEL PENDING (MERAH KECIL) */
+        /* Badge Pending */
         .badge-pending {
-            background: #D32F2F; color: white;
-            font-size: 0.6rem; padding: 2px 6px; border-radius: 10px;
-            margin-top: 5px; display: none; /* Default hidden */
+            background: #D32F2F; color: white; font-size: 0.6rem; padding: 3px 8px;
+            border-radius: 10px; margin-top: 5px; display: none;
         }
-
     </style>
 </head>
 <body>
 
     <div class="admin-header">
-        <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
-        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" style="width:50px; background:white; border-radius:50%; padding:3px;">
+        <div class="header-top">
+            <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" style="width:40px; background:white; border-radius:50%; padding:2px;">
+            <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; font-size:1.2rem;"></i>
+        </div>
+        
         <div class="header-title">Admin Panel</div>
-        <div class="header-subtitle">Kelola TBM Digital</div>
+        <div class="header-subtitle">Pantau & Kelola TBM</div>
     </div>
 
     <div class="stats-container">
         <div class="stat-card">
-            <div class="stat-num" id="countUsers">-</div>
+            <div class="stat-num" id="countUsers">0</div>
             <div class="stat-label">Total User</div>
         </div>
         <div class="stat-card">
-            <div class="stat-num" id="countReports">-</div>
+            <div class="stat-num" id="countReports">0</div>
             <div class="stat-label">Laporan Baru</div>
         </div>
     </div>
@@ -134,24 +115,24 @@
         <a href="laporan.html" class="admin-menu-item">
             <i class="fas fa-clipboard-check menu-icon" style="color:#43A047;"></i>
             <span class="menu-label">Cek<br>Laporan</span>
-            <span class="badge-pending" id="badgeLaporan">Baru!</span>
+            <span class="badge-pending" id="badgeLaporan">0</span>
         </a>
 
         <a href="karya.html" class="admin-menu-item">
             <i class="fas fa-pen-fancy menu-icon" style="color:#FB8C00;"></i>
             <span class="menu-label">Karya<br>Masuk</span>
-            <span class="badge-pending" id="badgeKarya">Baru!</span>
+            <span class="badge-pending" id="badgeKarya">0</span>
         </a>
 
         <a href="hadiah.html" class="admin-menu-item">
             <i class="fas fa-gift menu-icon" style="color:#E91E63;"></i>
             <span class="menu-label">Request<br>Hadiah</span>
-            <span class="badge-pending" id="badgeHadiah">Baru!</span>
+            <span class="badge-pending" id="badgeHadiah">0</span>
         </a>
 
         <a href="banner.html" class="admin-menu-item">
-            <i class="fas fa-image menu-icon" style="color:#0097A7;"></i>
-            <span class="menu-label">Ganti<br>Banner</span>
+            <i class="fas fa-paint-brush menu-icon" style="color:#0097A7;"></i>
+            <span class="menu-label">Tampilan<br>& Logo</span>
         </a>
 
         <a href="leaderboard.html" class="admin-menu-item">
@@ -160,14 +141,12 @@
         </a>
     </div>
 
-    <div class="text-center text-muted" style="font-size:0.7rem;">&copy; 2026 TBM Admin System</div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIG SERVER SINGAPURA (FIX)
+        // FIREBASE CONFIG (SINGAPURA)
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -182,72 +161,40 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // 1. CEK AUTH (Security)
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                if (!user.email.endsWith('@ac.id')) {
-                    alert('Akses khusus Admin!');
-                    window.location.href = "../dashboard/index.html";
-                } else {
-                    loadStats();
-                }
+            if (user && user.email.endsWith('@ac.id')) {
+                loadStats();
             } else {
                 window.location.href = "../index.html";
             }
         });
 
-        // 2. HITUNG DATA (Realtime Counter)
         function loadStats() {
-            // Hitung User
-            onValue(ref(db, 'users'), (snap) => {
-                document.getElementById('countUsers').innerText = snap.size || 0;
-            });
-
-            // Hitung Laporan Pending
+            onValue(ref(db, 'users'), (snap) => document.getElementById('countUsers').innerText = snap.size || 0);
+            
             onValue(ref(db, 'reports'), (snap) => {
-                let pendingCount = 0;
-                snap.forEach(c => {
-                    if(c.val().status === 'pending') pendingCount++;
-                });
-                document.getElementById('countReports').innerText = pendingCount;
-                
-                // Show Badge jika ada yang pending
-                if(pendingCount > 0) {
-                    document.getElementById('badgeLaporan').style.display = 'inline-block';
-                    document.getElementById('badgeLaporan').innerText = pendingCount + ' Baru';
-                } else {
-                    document.getElementById('badgeLaporan').style.display = 'none';
+                let p = 0; snap.forEach(c => { if(c.val().status==='pending') p++; });
+                document.getElementById('countReports').innerText = p;
+                if(p>0) { 
+                    document.getElementById('badgeLaporan').style.display='inline-block';
+                    document.getElementById('badgeLaporan').innerText = p + ' Baru';
                 }
             });
 
-            // Cek Karya Pending (Untuk Badge)
             onValue(ref(db, 'works'), (snap) => {
-                let pending = 0;
-                snap.forEach(c => { if(c.val().status === 'pending') pending++; });
-                if(pending > 0) {
-                    document.getElementById('badgeKarya').style.display = 'inline-block';
-                }
+                let p = 0; snap.forEach(c => { if(c.val().status==='pending') p++; });
+                if(p>0) document.getElementById('badgeKarya').style.display='inline-block';
             });
-
-            // Cek Hadiah Pending
+            
             onValue(ref(db, 'redemptions'), (snap) => {
-                let pending = 0;
-                snap.forEach(c => { if(c.val().status === 'pending') pending++; });
-                if(pending > 0) {
-                    document.getElementById('badgeHadiah').style.display = 'inline-block';
-                }
+                let p = 0; snap.forEach(c => { if(c.val().status==='pending') p++; });
+                if(p>0) document.getElementById('badgeHadiah').style.display='inline-block';
             });
         }
 
         window.logout = () => {
-            Swal.fire({
-                title: 'Keluar Admin?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#0D47A1',
-                confirmButtonText: 'Ya'
-            }).then(res => {
-                if(res.isConfirmed) signOut(auth).then(() => window.location.href="../index.html");
+            Swal.fire({title:'Keluar?', icon:'question', showCancelButton:true, confirmButtonText:'Ya'}).then(r => {
+                if(r.isConfirmed) signOut(auth).then(()=>window.location.href="../index.html");
             });
         }
     </script>
