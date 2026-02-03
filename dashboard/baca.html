@@ -4,58 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sedang Membaca</title>
-    
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        body {
-            margin: 0; padding: 0;
-            background-color: #FAF9F6; /* Warna Kertas Gading */
-            color: #2c2c2c;
-            transition: background 0.3s, color 0.3s;
-        }
-
-        /* HEADER BACA */
-        .reader-header {
-            position: sticky; top: 0; z-index: 100;
-            background: rgba(250, 249, 246, 0.95);
-            border-bottom: 1px solid #ddd;
-            padding: 10px 15px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-
-        .book-info { font-family: 'Poppins', sans-serif; font-size: 0.85rem; font-weight: 600; max-width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        /* AREA KONTEN */
-        .content-area {
-            max-width: 700px; margin: 0 auto;
-            padding: 30px 20px 100px 20px;
-            font-family: 'Lora', serif; /* Font Novel */
-            font-size: 18px; line-height: 1.8; text-align: justify;
-        }
+        body { margin: 0; padding: 0; background-color: #FAF9F6; color: #2c2c2c; transition: background 0.3s, color 0.3s; }
+        .reader-header { position: sticky; top: 0; z-index: 100; background: rgba(250, 249, 246, 0.95); border-bottom: 1px solid #ddd; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; }
+        .book-info { font-family: 'Poppins', sans-serif; font-size: 0.85rem; font-weight: 600; max-width: 50%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .content-area { max-width: 700px; margin: 0 auto; padding: 30px 20px 50px 20px; font-family: 'Lora', serif; font-size: 18px; line-height: 1.8; text-align: justify; }
         
-        /* Dark Mode */
         body.dark-mode { background-color: #222; color: #ccc; }
         body.dark-mode .reader-header { background: rgba(34,34,34,0.95); border-color: #444; }
 
-        /* TIMER XP PROGRESS RING */
-        .timer-container {
-            position: relative; width: 40px; height: 40px;
-            display: flex; align-items: center; justify-content: center;
-        }
-        
-        .xp-label {
-            position: absolute; font-size: 0.6rem; font-weight: 900; 
-            font-family: 'Poppins', sans-serif; color: #FB8C00;
-        }
+        /* Timer Ring */
+        .timer-container { position: relative; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .xp-label { position: absolute; font-size: 0.6rem; font-weight: 900; font-family: 'Poppins', sans-serif; color: #FB8C00; }
+        .progress-ring__circle { transition: stroke-dashoffset 1s linear; transform: rotate(-90deg); transform-origin: 50% 50%; }
 
-        /* SVG Circle Animation */
-        .progress-ring__circle {
-            transition: stroke-dashoffset 1s linear;
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-        }
+        /* Tombol Selesai */
+        .finish-section { margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; }
+        .btn-finish { background: #4CAF50; color: white; border: none; padding: 12px 30px; border-radius: 50px; font-weight: 600; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); width: 100%; max-width: 300px; }
     </style>
 </head>
 <body>
@@ -63,31 +32,27 @@
     <div class="reader-header">
         <i class="fas fa-arrow-left" onclick="history.back()" style="font-size:1.2rem; cursor:pointer; color:#555;"></i>
         <div class="book-info" id="rTitle">Memuat...</div>
-        
         <div class="d-flex align-items-center gap-3">
             <i class="fas fa-adjust" onclick="toggleTheme()" style="cursor:pointer; color:#555;"></i>
-            
             <div class="timer-container">
                 <svg width="36" height="36">
                     <circle stroke="#ddd" stroke-width="3" fill="transparent" r="16" cx="18" cy="18"/>
-                    <circle 
-                        id="progressRing"
-                        class="progress-ring__circle"
-                        stroke="#FB8C00" 
-                        stroke-width="3" 
-                        fill="transparent" 
-                        r="16" cx="18" cy="18"
-                        stroke-dasharray="100.5" 
-                        stroke-dashoffset="100.5"
-                    />
+                    <circle id="progressRing" class="progress-ring__circle" stroke="#FB8C00" stroke-width="3" fill="transparent" r="16" cx="18" cy="18" stroke-dasharray="100.5" stroke-dashoffset="100.5"/>
                 </svg>
                 <div class="xp-label">XP</div>
             </div>
         </div>
     </div>
 
-    <div class="content-area" id="rContent">
-        <p style="text-align:center; color:#999; margin-top:50px;">Sedang mengambil halaman...</p>
+    <div class="content-area">
+        <div id="rContent"><p style="text-align:center; color:#999; margin-top:50px;">Sedang mengambil halaman...</p></div>
+        
+        <div class="finish-section">
+            <p class="small text-muted mb-2">Sudah selesai membaca bab ini?</p>
+            <button class="btn-finish" onclick="finishReading()">
+                <i class="fas fa-check-circle me-2"></i> Selesai Baca
+            </button>
+        </div>
     </div>
 
     <script type="module">
@@ -95,7 +60,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, get, update, increment, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // FIREBASE CONFIG
+        // CONFIG FIREBASE (SINGAPURA)
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -112,88 +77,87 @@
         
         let currentUser = null;
         let timerSeconds = 0;
-        const XP_INTERVAL = 300; // 5 Menit = 300 detik
-        // const XP_INTERVAL = 10; // DEBUG MODE: 10 Detik (Gunakan ini untuk tes cepat)
+        const XP_INTERVAL = 300; // 5 Menit (Ganti jadi 10 kalau mau tes cepat)
+        let bookTitle = "Buku";
 
-        // 1. SETUP TIMER VISUAL
+        // VISUAL TIMER
         const circle = document.getElementById('progressRing');
-        const radius = circle.r.baseVal.value;
-        const circumference = radius * 2 * Math.PI;
-
+        const circumference = circle.r.baseVal.value * 2 * Math.PI;
         circle.style.strokeDasharray = `${circumference} ${circumference}`;
         circle.style.strokeDashoffset = circumference;
+        function setProgress(percent) { circle.style.strokeDashoffset = circumference - (percent / 100) * circumference; }
 
-        function setProgress(percent) {
-            const offset = circumference - (percent / 100) * circumference;
-            circle.style.strokeDashoffset = offset;
-        }
-
-        // 2. LOGIKA TIMER BERJALAN
         setInterval(() => {
             if(currentUser) {
                 timerSeconds++;
-                
-                // Hitung Persentase Lingkaran
-                const percentage = (timerSeconds / XP_INTERVAL) * 100;
-                setProgress(percentage);
-
-                // Jika sudah 5 menit (300 detik)
+                setProgress((timerSeconds / XP_INTERVAL) * 100);
                 if(timerSeconds >= XP_INTERVAL) {
                     addXP();
-                    timerSeconds = 0; // Reset
+                    timerSeconds = 0;
                 }
             }
-        }, 1000); // Jalan tiap 1 detik
+        }, 1000);
 
-        // 3. FUNGSI TAMBAH XP
         function addXP() {
-            // Update Database
+            // 1. Tambah XP
             update(ref(db, 'users/' + currentUser.uid), { xp: increment(2) });
             
-            // Opsional: Catat Log (Bisa dimatikan kalau terlalu spam)
-            // push(ref(db, `logs/${currentUser.uid}`), {
-            //     activity: "Membaca Buku (5 Menit)",
-            //     points: 2,
-            //     date: new Date().toLocaleDateString('id-ID')
-            // });
+            // 2. CATAT LOG AKTIVITAS (Supaya Dashboard tidak kosong)
+            push(ref(db, `logs/${currentUser.uid}`), {
+                activity: "Fokus Membaca (+2 XP)",
+                points: 2,
+                date: new Date().toLocaleDateString('id-ID')
+            });
 
-            // Efek Visual Kecil (Toast atau Warna berubah sesaat)
+            // Efek UI
             const label = document.querySelector('.xp-label');
-            label.style.color = "#4CAF50"; // Hijau
-            label.innerText = "+2";
-            setTimeout(() => { 
-                label.style.color = "#FB8C00"; 
-                label.innerText = "XP";
-            }, 2000);
+            label.style.color = "#4CAF50"; label.innerText = "+2";
+            setTimeout(() => { label.style.color = "#FB8C00"; label.innerText = "XP"; }, 2000);
         }
 
-        // 4. LOAD KONTEN BUKU
         onAuthStateChanged(auth, (user) => {
             if(user) {
                 currentUser = user;
-                const urlParams = new URLSearchParams(window.location.search);
-                const bookId = urlParams.get('id');
-                
-                if(bookId) {
-                    get(ref(db, 'books/' + bookId)).then(snap => {
+                const id = new URLSearchParams(window.location.search).get('id');
+                if(id) {
+                    get(ref(db, 'books/' + id)).then(snap => {
                         if(snap.exists()) {
                             const d = snap.val();
+                            bookTitle = d.title;
                             document.getElementById('rTitle').innerText = d.title;
-                            // Convert newline to paragraphs simple
-                            const formatted = d.content.replace(/\n/g, '<br><br>');
-                            document.getElementById('rContent').innerHTML = formatted;
+                            document.getElementById('rContent').innerHTML = d.content.replace(/\n/g, '<br><br>');
                         }
                     });
                 }
-            } else {
-                window.location.href = "../index.html";
-            }
+            } else window.location.href = "../index.html";
         });
 
-        // 5. DARK MODE
-        window.toggleTheme = () => {
-            document.body.classList.toggle('dark-mode');
+        // FUNGSI TOMBOL SELESAI
+        window.finishReading = () => {
+            Swal.fire({
+                title: 'Selesai Baca?',
+                text: 'Ini akan tercatat di profilmu.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Selesai'
+            }).then((res) => {
+                if(res.isConfirmed) {
+                    // 1. Tambah Counter Buku
+                    update(ref(db, 'users/' + currentUser.uid), { booksRead: increment(1) });
+                    
+                    // 2. Catat Log
+                    push(ref(db, `logs/${currentUser.uid}`), {
+                        activity: `Menamatkan: ${bookTitle}`,
+                        points: 0,
+                        date: new Date().toLocaleDateString('id-ID')
+                    });
+
+                    Swal.fire('Tercatat!', 'Jumlah buku dibaca bertambah.', 'success').then(() => history.back());
+                }
+            });
         }
+
+        window.toggleTheme = () => document.body.classList.toggle('dark-mode');
     </script>
 </body>
 </html>
