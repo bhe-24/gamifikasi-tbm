@@ -11,16 +11,14 @@
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #E8F5E9; padding-bottom: 50px; }
         .admin-header { background: #43A047; color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .report-card { background: white; margin: 15px 20px; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid #FFC107; animation: slideUp 0.3s ease; }
+        .report-card { background: white; margin: 15px 20px; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid #FFC107; }
         .user-info { font-weight: 700; color: #1B5E20; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;}
         .book-info { font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; color: #333; }
         .summary-box { background: #f9f9f9; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #555; font-style: italic; margin-bottom: 15px; border: 1px dashed #ccc;}
         .btn-action { width: 48%; border-radius: 20px; padding: 8px; font-size: 0.9rem; font-weight: 600; }
-        @keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
-
     <div class="admin-header">
         <div class="d-flex align-items-center gap-3">
             <i class="fas fa-arrow-left" onclick="window.location.href='index.html'" style="cursor:pointer; font-size:1.2rem;"></i>
@@ -37,7 +35,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, update, increment, push, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, increment, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         // CONFIG SERVER SINGAPURA
         const firebaseConfig = {
@@ -59,7 +57,7 @@
             container.innerHTML = '';
 
             if(!snap.exists()) {
-                container.innerHTML = '<div class="text-center p-5 text-muted">Semua laporan aman!</div>';
+                container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada laporan.</div>';
                 return;
             }
 
@@ -67,8 +65,12 @@
             snap.forEach(child => {
                 const r = child.val();
                 const key = child.key;
+
                 if(r.status === 'pending') {
                     pendingCount++;
+                    // Kita pastikan r.uid ada, jika tidak, kita tidak bisa approve
+                    const uidSafe = r.uid || "ERROR_UID";
+                    
                     container.innerHTML += `
                         <div class="report-card">
                             <div class="user-info">
@@ -79,9 +81,9 @@
                             <div class="book-info"><i class="fas fa-book-open text-success me-1"></i> ${r.bookTitle}</div>
                             <div class="summary-box">"${r.summary}"</div>
                             <div class="d-flex justify-content-between">
-                                <button class="btn btn-outline-danger btn-action" onclick="rejectReport('${key}')"><i class="fas fa-times"></i> Tolak</button>
-                                <button class="btn btn-success btn-action" onclick="approveReport('${key}', '${r.uid}', 50)">
-                                    <i class="fas fa-check"></i> Terima (+50)
+                                <button class="btn btn-outline-danger btn-action" onclick="rejectReport('${key}')">Tolak</button>
+                                <button class="btn btn-success btn-action" onclick="approveReport('${key}', '${uidSafe}', 50)">
+                                    Terima (+50)
                                 </button>
                             </div>
                         </div>
@@ -92,38 +94,41 @@
             if(pendingCount === 0) container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada laporan baru.</div>';
         });
 
-        // --- FUNGSI UTAMA (DIPERBAIKI) ---
+        // FUNGSI TERIMA (FIX LOGING)
         window.approveReport = async (reportKey, userUid, points) => {
-            if(!userUid) { Swal.fire('Error', 'Data User UID hilang!', 'error'); return; }
+            if(userUid === "ERROR_UID") {
+                Swal.fire('Gagal', 'Data laporan rusak (UID User tidak ada).', 'error');
+                return;
+            }
 
             try {
-                // 1. Ubah Status Laporan di Database Reports
+                const p = parseInt(points);
+                
+                // 1. Update Status Laporan
                 await update(ref(db, `reports/${reportKey}`), { status: 'approved' });
 
-                // 2. Tambah XP User
-                await update(ref(db, `users/${userUid}`), { xp: increment(parseInt(points)) });
+                // 2. Tambah XP
+                await update(ref(db, `users/${userUid}`), { xp: increment(p) });
 
-                // 3. CATAT LOG KE RIWAYAT USER (PENTING! INI YANG BIKIN MUNCUL DI DASHBOARD)
+                // 3. PUSH LOG (Pastikan path benar)
                 await push(ref(db, `logs/${userUid}`), {
-                    activity: "Laporan Diterima (Admin)",
-                    points: parseInt(points),
+                    activity: "Laporan Diterima Admin",
+                    points: p,
                     date: new Date().toLocaleDateString('id-ID'),
-                    timestamp: Date.now() // Tambah timestamp biar urutan benar
+                    timestamp: Date.now()
                 });
 
                 const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
-                Toast.fire({icon: 'success', title: 'Sukses! Riwayat tercatat.'});
+                Toast.fire({icon: 'success', title: 'Laporan Diterima & Log Tercatat!'});
 
             } catch(e) {
                 console.error(e);
-                Swal.fire('Error', 'Gagal update database: ' + e.message, 'error');
+                Swal.fire('Error', e.message, 'error');
             }
         };
 
         window.rejectReport = (key) => {
-            Swal.fire({
-                title: 'Tolak?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya'
-            }).then(r => {
+            Swal.fire({ title: 'Tolak?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya' }).then(r => {
                 if(r.isConfirmed) update(ref(db, `reports/${key}`), { status: 'rejected' });
             });
         }
