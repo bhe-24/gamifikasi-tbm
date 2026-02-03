@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Masuk - Taman Bacaan Masyarakat</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* 2. CSS CUSTOM - DESAIN VISUAL */
+        :root {
+            --pastel-blue: #AEC6CF;
+            --pastel-red: rgba(255, 179, 186, 0.5);
+            --pastel-orange: rgba(255, 223, 186, 0.5);
+            --pastel-green: rgba(186, 255, 201, 0.5);
+            --primary-btn: #FF6F61; /* Warna tegas tapi ceria */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden; /* Supaya background tidak scroll */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--pastel-blue);
+        }
+
+        /* Animasi Background Polkadot Berjalan */
+        .animated-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: 
+                radial-gradient(circle, var(--pastel-red) 10%, transparent 11%),
+                radial-gradient(circle, var(--pastel-orange) 10%, transparent 11%),
+                radial-gradient(circle, var(--pastel-green) 10%, transparent 11%);
+            background-size: 100px 100px;
+            background-position: 0 0, 50px 50px, 25px 75px;
+            animation: moveDots 20s linear infinite;
+        }
+
+        @keyframes moveDots {
+            0% { background-position: 0 0, 50px 50px, 25px 75px; }
+            100% { background-position: 100px 100px, 150px 150px, 125px 175px; }
+        }
+
+        /* Container Kartu Login */
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px; /* Tampilan Desktop tetep rapi */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Logo & Header */
+        .app-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            border-radius: 50%;
+            background: white;
+            padding: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .app-title {
+            font-weight: 700;
+            color: #444;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        /* Form Styling */
+        .form-control {
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #eee;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--pastel-blue);
+            box-shadow: none;
+        }
+
+        .btn-custom {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            border: none;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary-custom {
+            background-color: var(--primary-btn);
+            color: white;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: #ff5a4d;
+        }
+
+        .btn-primary-custom:active {
+            transform: scale(0.95);
+        }
+
+        .toggle-text {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .toggle-link {
+            color: var(--primary-btn);
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        /* Footer */
+        .footer-text {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.75rem;
+            color: rgba(0,0,0,0.5);
+        }
+        
+        .footer-text a {
+            color: #444;
+            text-decoration: none;
+        }
+
+        /* Helper untuk sembunyikan section */
+        .d-none-custom {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="animated-bg"></div>
+
+    <div class="login-card">
+        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" alt="Logo TBM" class="app-logo" id="dynamicLogo">
+        
+        <h2 class="app-title">Taman Bacaan<br>Masyarakat</h2>
+
+        <div id="loginSection">
+            <h5 class="mb-3 text-muted">Selamat Datang!</h5>
+            <form id="loginForm">
+                <input type="email" id="loginEmail" class="form-control" placeholder="Email (gmail / ac.id)" required>
+                <input type="password" id="loginPassword" class="form-control" placeholder="Password" required>
+                
+                <div class="text-end mb-2">
+                    <small><a href="#" class="text-muted" onclick="showForgot()">Lupa Password?</a></small>
+                </div>
+
+                <button type="submit" class="btn btn-custom btn-primary-custom">
+                    MASUK SEKARANG <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </form>
+            <div class="toggle-text">
+                Belum punya akun? <span class="toggle-link" onclick="showRegister()">Daftar di sini</span>
+            </div>
+        </div>
+
+        <div id="registerSection" class="d-none-custom">
+            <h5 class="mb-3 text-muted">Buat Akun Baru</h5>
+            <form id="registerForm">
+                <input type="text" id="regName" class="form-control" placeholder="Nama Lengkap" required>
+                <input type="number" id="regAge" class="form-control" placeholder="Umur" required>
+                <input type="text" id="regUsername" class="form-control" placeholder="Username Unik" required>
+                <input type="email" id="regEmail" class="form-control" placeholder="Email" required>
+                <input type="password" id="regPassword" class="form-control" placeholder="Password (Min. 6 Karakter)" required>
+
+                <button type="submit" class="btn btn-custom btn-primary-custom">
+                    DAFTAR AKUN <i class="fas fa-user-plus ms-2"></i>
+                </button>
+            </form>
+            <div class="toggle-text">
+                Sudah punya akun? <span class="toggle-link" onclick="showLogin()">Masuk saja</span>
+            </div>
+        </div>
+
+        <div id="forgotSection" class="d-none-custom">
+            <h5 class="mb-3 text-muted">Reset Password</h5>
+            <p style="font-size: 0.8rem;">Masukkan email kamu, kami akan kirim link reset.</p>
+            <form id="forgotForm">
+                <input type="email" id="forgotEmail" class="form-control" placeholder="Email Terdaftar" required>
+                <button type="submit" class="btn btn-custom btn-primary-custom">
+                    KIRIM LINK
+                </button>
+            </form>
+            <div class="toggle-text">
+                <span class="toggle-link" onclick="showLogin()">Kembali ke Login</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-text">
+        &copy; 2026 TBM Digital. <a href="privacy.html">Kebijakan Privasi</a>
+    </div>
+
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Konfigurasi Firebase Anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
+            authDomain: "pkm-pm-def08.firebaseapp.com",
+            projectId: "pkm-pm-def08",
+            storageBucket: "pkm-pm-def08.firebasestorage.app",
+            messagingSenderId: "1077227616889",
+            appId: "1:1077227616889:web:9ce3a57e3d46012acab2a8"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // --- FUNGSI UI TOGGLE (Ganti Tampilan Login/Register) ---
+        window.showRegister = () => {
+            document.getElementById('loginSection').classList.add('d-none-custom');
+            document.getElementById('forgotSection').classList.add('d-none-custom');
+            document.getElementById('registerSection').classList.remove('d-none-custom');
+        };
+
+        window.showLogin = () => {
+            document.getElementById('registerSection').classList.add('d-none-custom');
+            document.getElementById('forgotSection').classList.add('d-none-custom');
+            document.getElementById('loginSection').classList.remove('d-none-custom');
+        };
+
+        window.showForgot = () => {
+            document.getElementById('loginSection').classList.add('d-none-custom');
+            document.getElementById('registerSection').classList.add('d-none-custom');
+            document.getElementById('forgotSection').classList.remove('d-none-custom');
+        }
+
+        // --- LOGIKA REGISTER ---
+        const registerForm = document.getElementById('registerForm');
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Ambil data
+            const name = document.getElementById('regName').value;
+            const age = document.getElementById('regAge').value;
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            // Validasi Domain untuk Register (Opsional: Jika admin hanya boleh dibuat manual, bisa diblokir disini)
+            // Untuk sekarang kita bebaskan user mendaftar.
+
+            try {
+                // 1. Buat User di Auth
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // 2. Update Profile Auth (Nama Display)
+                await updateProfile(user, { displayName: name });
+
+                // 3. Simpan data tambahan ke Realtime Database (TIDAK BOLEH LOKAL STORAGE)
+                // Struktur: users/{uid}
+                await set(ref(db, 'users/' + user.uid), {
+                    fullName: name,
+                    age: age,
+                    username: username,
+                    email: email,
+                    role: email.endsWith('@ac.id') ? 'admin' : 'user', // Set role otomatis berdasarkan domain
+                    level: 1, // Default Level Gamifikasi
+                    xp: 0,
+                    badges: [],
+                    createdAt: new Date().toISOString()
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Hore! Akun Jadi',
+                    text: 'Selamat bergabung! Silakan login.',
+                    confirmButtonColor: '#FF6F61'
+                }).then(() => {
+                    showLogin();
+                    registerForm.reset();
+                });
+
+            } catch (error) {
+                console.error(error);
+                let msg = "Terjadi kesalahan.";
+                if(error.code === 'auth/email-already-in-use') msg = "Email sudah terdaftar!";
+                if(error.code === 'auth/weak-password') msg = "Password terlalu lemah (min 6 karakter).";
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: msg,
+                    confirmButtonColor: '#FF6F61'
+                });
+            }
+        });
+
+        // --- LOGIKA LOGIN & ROUTING ---
+        const loginForm = document.getElementById('loginForm');
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Login Berhasil!',
+                        text: 'Mengalihkan ke halaman utama...',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // LOGIKA ROUTING BERDASARKAN DOMAIN
+                        if (email.endsWith('@ac.id')) {
+                            // Masuk ke Halaman Admin
+                            window.location.href = "admin/index.html"; 
+                        } else {
+                            // Masuk ke Halaman User (Remaja)
+                            window.location.href = "dashboard/index.html";
+                        }
+                    });
+                })
+                .catch((error) => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Masuk',
+                        text: 'Email atau password salah. Coba lagi ya!',
+                        confirmButtonColor: '#FF6F61'
+                    });
+                });
+        });
+
+        // --- LOGIKA LUPA PASSWORD ---
+        const forgotForm = document.getElementById('forgotForm');
+        forgotForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+
+            sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Cek Emailmu',
+                        text: 'Kami sudah mengirimkan link reset password. Cek inbox/spam ya.',
+                        confirmButtonColor: '#FF6F61'
+                    }).then(() => {
+                        showLogin();
+                    });
+                })
+                .catch((error) => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Email tidak ditemukan atau terjadi kesalahan.',
+                        confirmButtonColor: '#FF6F61'
+                    });
+                });
+        });
+
+        // --- CEK LOGO (FUTURE PROOF) ---
+        // Nanti di sini kita akan tambahkan kode untuk mengambil URL logo 
+        // dari node 'settings/logoUrl' di Firebase. 
+        // Saat ini pakai gambar static dulu.
+
+    </script>
+</body>
+</html>
