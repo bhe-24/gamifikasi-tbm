@@ -3,177 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pustaka Digital - TBM</title>
-    
+    <title>Pustaka Digital</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-
     <style>
-        :root {
-            --theme-color: #D8BFD8; /* Lilac Pastel - Khas Ruang Baca */
-            --theme-dark: #BA68C8;  /* Ungu lebih tua untuk aksen */
-            --bg-color: #F3E5F5;    /* Latar belakang ungu sangat muda */
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-color);
-            padding-bottom: 50px;
-            margin: 0;
-        }
-
-        /* HEADER */
-        .page-header {
-            background: linear-gradient(135deg, #D8BFD8, #E1BEE7);
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
-        }
-
-        .back-btn { color: white; font-size: 1.2rem; cursor: pointer; border:none; background:none;}
-        .page-title { color: white; font-weight: 700; font-size: 1.1rem; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .header-logo { width: 38px; height: 38px; background: white; border-radius: 50%; padding: 3px; object-fit: contain; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
-
-        /* BANNER */
-        .promo-banner {
-            margin: 20px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            min-height: 120px;
-            background: #fff;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .promo-banner img { width: 100%; height: auto; display: block; }
-
-        /* SEARCH BAR */
-        .search-container {
-            margin: 0 20px 25px 20px;
-            position: relative;
-        }
-        .search-input {
-            border-radius: 25px;
-            border: none;
-            padding: 12px 20px 12px 45px;
-            width: 100%;
-            outline: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            font-size: 0.9rem;
-        }
-        .search-icon {
-            position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
-            color: #aaa;
-        }
-
-        /* KATEGORI & BUKU */
-        .category-section { margin-bottom: 30px; padding-left: 20px; animation: fadeIn 0.5s; }
+        body { font-family: 'Poppins', sans-serif; background-color: #F3E5F5; padding-bottom: 60px; }
         
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .cat-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #4A148C; /* Ungu Gelap */
-            margin-bottom: 12px;
-            border-left: 4px solid var(--theme-dark);
-            padding-left: 10px;
-            display: flex; align-items: center;
+        .page-header {
+            background: linear-gradient(135deg, #CE93D8, #AB47BC); /* Ungu Gradasi */
+            padding: 15px 20px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
         }
 
-        /* Horizontal Scroll */
-        .book-scroller {
-            display: flex;
-            overflow-x: auto;
-            gap: 15px;
-            padding-bottom: 15px;
-            padding-right: 20px;
-            scrollbar-width: none;
-        }
+        .search-box { margin: 20px; position: relative; }
+        .search-input { width: 100%; border-radius: 25px; border: none; padding: 12px 20px 12px 45px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa; }
+
+        /* KATEGORI RAPI */
+        .category-section { margin-bottom: 25px; padding-left: 20px; }
+        .cat-title { font-weight: 700; color: #6A1B9A; margin-bottom: 10px; border-left: 4px solid #AB47BC; padding-left: 10px; }
+
+        .book-scroller { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; padding-right: 20px; scrollbar-width: none; }
         .book-scroller::-webkit-scrollbar { display: none; }
 
+        /* KARTU BUKU STABIL */
         .book-card {
-            min-width: 120px;
-            width: 120px;
-            background: transparent;
-            cursor: pointer;
-            transition: transform 0.2s;
-            position: relative;
+            min-width: 130px; width: 130px; /* Lebar Kunci */
+            display: flex; flex-direction: column; cursor: pointer;
         }
-        .book-card:active { transform: scale(0.95); }
-
         .book-cover {
-            width: 100%;
-            height: 170px;
-            border-radius: 12px;
-            object-fit: cover;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin-bottom: 8px;
-            background-color: #eee;
+            width: 100%; height: 190px; /* Tinggi Kunci */
+            border-radius: 10px; object-fit: cover;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 8px; background: #ddd;
         }
-        
         .book-title {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #333;
-            line-height: 1.3;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            margin-bottom: 2px;
+            font-size: 0.85rem; font-weight: 600; color: #333; line-height: 1.2;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; /* Potong teks kalau kepanjangan */
+            height: 2.4em; /* Tinggi pas 2 baris */
         }
-        .book-author { font-size: 0.7rem; color: #7B1FA2; font-weight: 500; }
-        
-        /* FOOTER */
-        .footer-text { text-align: center; font-size: 0.7rem; color: #999; margin-top: 20px; padding-bottom: 20px; }
-        
-        /* Empty State */
-        .empty-state { text-align: center; padding: 40px 20px; color: #888; }
+        .book-author { font-size: 0.75rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
-
     <div class="page-header">
-        <button onclick="history.back()" class="back-btn"><i class="fas fa-arrow-left"></i></button>
-        <div class="page-title">Pustaka Digital</div>
-        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" id="logoHeader" class="header-logo">
+        <i class="fas fa-arrow-left" onclick="window.location.href='index.html'" style="font-size:1.2rem; cursor:pointer;"></i>
+        <span style="font-weight:700;">Baca Online</span>
+        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" style="width:35px; background:white; border-radius:50%; padding:2px;">
     </div>
 
-    <div class="promo-banner">
-        <img src="https://placehold.co/600x200/D8BFD8/ffffff?text=Koleksi+Buku+Baru!" id="bannerBuku">
+    <div style="margin:20px; border-radius:15px; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+        <img src="https://placehold.co/600x200/CE93D8/ffffff?text=Pustaka+Digital" id="bannerImg" style="width:100%; display:block;">
     </div>
 
-    <div class="search-container">
+    <div class="search-box">
         <i class="fas fa-search search-icon"></i>
-        <input type="text" id="searchInput" class="search-input" placeholder="Cari judul atau penulis...">
+        <input type="text" id="searchInput" class="search-input" placeholder="Cari buku...">
     </div>
 
-    <div id="mainContent">
-        <div class="text-center p-5 text-muted">
-            <i class="fas fa-spinner fa-spin fa-2x mb-2" style="color:var(--theme-dark)"></i><br>
-            <small>Mengambil data buku...</small>
-        </div>
+    <div id="contentArea">
+        <div class="text-center p-5 text-muted"><i class="fas fa-spinner fa-spin"></i> Memuat pustaka...</div>
     </div>
-
-    <div class="footer-text">&copy; 2026 TBM Digital</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // --- KONFIGURASI FIREBASE (SUDAH DIPERBAIKI) ---
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
-            // ALAMAT SERVER SINGAPURA YANG BENAR:
             databaseURL: "https://pkm-pm-def08-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "pkm-pm-def08",
             storageBucket: "pkm-pm-def08.firebasestorage.app",
@@ -183,102 +82,60 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        let allBooks = [];
 
-        // 1. Load Settings (Logo & Banner)
-        onValue(ref(db, 'settings'), (snap) => {
-            const data = snap.val();
-            if(data) {
-                if(data.logoUrl) document.getElementById('logoHeader').src = data.logoUrl;
-                if(data.bannerBacaUrl) document.getElementById('bannerBuku').src = data.bannerBacaUrl;
-            }
+        // Load Settings
+        onValue(ref(db, 'settings'), snap => {
+            if(snap.val() && snap.val().bannerBacaUrl) document.getElementById('bannerImg').src = snap.val().bannerBacaUrl;
         });
 
-        // 2. Load Buku & Logic
-        const booksRef = ref(db, 'books');
-        let allBooks = []; // Simpan semua buku di sini untuk keperluan search lokal
-
-        onValue(booksRef, (snapshot) => {
-            if (!snapshot.exists()) {
-                document.getElementById('mainContent').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-book-dead fa-3x mb-3"></i><br>
-                        Belum ada koleksi buku.
-                    </div>`;
-                return;
-            }
-
+        // Load Books
+        onValue(ref(db, 'books'), snap => {
+            const container = document.getElementById('contentArea');
+            if(!snap.exists()) { container.innerHTML = '<div class="text-center p-5 text-muted">Belum ada buku.</div>'; return; }
+            
             allBooks = [];
-            snapshot.forEach((child) => {
-                allBooks.push({ id: child.key, ...child.val() });
-            });
-
-            // Render Awal (Tampilkan Semua)
+            snap.forEach(c => allBooks.push({id:c.key, ...c.val()}));
             renderBooks(allBooks);
         });
 
-        // FUNGSI RENDER (Bisa dipanggil ulang saat Search)
-        function renderBooks(booksToRender) {
-            const contentDiv = document.getElementById('mainContent');
-            contentDiv.innerHTML = ''; // Reset tampilan
-
-            if (booksToRender.length === 0) {
-                contentDiv.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-search-minus fa-2x mb-3"></i><br>
-                        Buku tidak ditemukan.
-                    </div>`;
-                return;
-            }
-
-            // Grouping berdasarkan Kategori
-            const categories = {};
-            booksToRender.forEach(book => {
-                const catName = book.category || "Lainnya";
-                if (!categories[catName]) categories[catName] = [];
-                categories[catName].push(book);
+        function renderBooks(books) {
+            const container = document.getElementById('contentArea');
+            container.innerHTML = '';
+            
+            // Grouping
+            const cats = {};
+            books.forEach(b => {
+                const c = b.category || "Umum";
+                if(!cats[c]) cats[c] = [];
+                cats[c].push(b);
             });
 
-            // Loop Kategori dan Buat HTML
-            Object.keys(categories).forEach(cat => {
-                const booksInCat = categories[cat];
-                let booksHtml = '';
-
-                booksInCat.forEach(b => {
-                    booksHtml += `
+            Object.keys(cats).forEach(cat => {
+                let items = '';
+                cats[cat].forEach(b => {
+                    items += `
                         <div class="book-card" onclick="window.location.href='preview-buku.html?id=${b.id}'">
-                            <img src="${b.coverUrl}" class="book-cover" onerror="this.src='https://placehold.co/120x170?text=No+Cover'">
+                            <img src="${b.coverUrl}" class="book-cover" onerror="this.src='https://placehold.co/130x190?text=No+Cover'">
                             <div class="book-title">${b.title}</div>
                             <div class="book-author">${b.author}</div>
                         </div>
                     `;
                 });
-
-                contentDiv.innerHTML += `
+                container.innerHTML += `
                     <div class="category-section">
-                        <div class="cat-title"><i class="fas fa-bookmark me-2" style="font-size:0.8rem;"></i> ${cat}</div>
-                        <div class="book-scroller">
-                            ${booksHtml}
-                        </div>
+                        <div class="cat-title">${cat}</div>
+                        <div class="book-scroller">${items}</div>
                     </div>
                 `;
             });
         }
 
-        // 3. Logic Pencarian Cerdas
         document.getElementById('searchInput').addEventListener('input', (e) => {
-            const keyword = e.target.value.toLowerCase();
-            
-            // Filter array buku
-            const filteredBooks = allBooks.filter(book => {
-                const title = (book.title || "").toLowerCase();
-                const author = (book.author || "").toLowerCase();
-                return title.includes(keyword) || author.includes(keyword);
-            });
-
-            // Render ulang hanya buku yang cocok
-            renderBooks(filteredBooks);
+            const key = e.target.value.toLowerCase();
+            const filtered = allBooks.filter(b => b.title.toLowerCase().includes(key) || b.author.toLowerCase().includes(key));
+            renderBooks(filtered);
         });
-
     </script>
 </body>
 </html>
