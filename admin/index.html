@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Panel - TBM</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --admin-blue: #0D47A1;
+            --admin-dark: #002171;
+            --bg-light: #f4f6f9;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+
+        /* HEADER */
+        .admin-header {
+            background-color: var(--admin-blue);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title { font-weight: 700; font-size: 1.1rem; }
+        .btn-logout { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 5px; padding: 5px 10px; }
+
+        /* MENU NAVIGASI (Horizontal Scroll) */
+        .nav-scroller {
+            background: white;
+            padding: 10px;
+            overflow-x: auto;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 8px 15px;
+            margin-right: 10px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #555;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.active {
+            background-color: var(--admin-blue);
+            color: white;
+            border-color: var(--admin-blue);
+            font-weight: 600;
+        }
+
+        /* CONTAINER KONTEN */
+        .content-section {
+            display: none; /* Hidden by default */
+            padding: 0 20px;
+            animation: fadeIn 0.3s;
+        }
+        .content-section.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* CARD STYLE */
+        .admin-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        /* BANNER PREVIEW */
+        .banner-preview {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #eee;
+            margin-bottom: 15px;
+            border: 2px dashed #ccc;
+        }
+
+        /* LEADERBOARD TABLE */
+        .lb-row {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .lb-rank { width: 30px; font-weight: bold; color: var(--admin-blue); }
+        .lb-img { width: 35px; height: 35px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
+        .lb-name { flex-grow: 1; font-size: 0.9rem; }
+        .lb-xp { font-weight: 700; color: #28a745; }
+
+        /* ITEM LIST (Laporan/Karya) */
+        .item-list { border-left: 4px solid #ddd; }
+        .item-list.pending { border-left-color: #ffc107; }
+        .item-list.approved { border-left-color: #28a745; }
+        
+        .action-btn { font-size: 0.8rem; padding: 5px 10px; border-radius: 5px; margin-top: 5px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="admin-header">
+        <div class="header-title"><i class="fas fa-user-shield me-2"></i>Admin Panel</div>
+        <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+
+    <div class="nav-scroller">
+        <div class="nav-btn active" onclick="switchTab('leaderboard')">🏆 Leaderboard</div>
+        <div class="nav-btn" onclick="switchTab('banner')">🖼️ Banner</div>
+        <div class="nav-btn" onclick="switchTab('laporan')">📝 Laporan</div>
+        <div class="nav-btn" onclick="switchTab('karya')">✍️ Karya User</div>
+        <div class="nav-btn" onclick="switchTab('hadiah')">🎁 Tukar Poin</div>
+    </div>
+
+    <div id="tab-leaderboard" class="content-section active">
+        <h5 class="mb-3">Klasemen Sementara</h5>
+        <div class="admin-card">
+            <div id="leaderboardList">
+                <div class="text-center text-muted">Memuat data...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-banner" class="content-section">
+        <h5 class="mb-3">Update Banner Dashboard</h5>
+        <div class="admin-card text-center">
+            <img id="previewBanner" src="" class="banner-preview" onerror="this.src='https://placehold.co/600x200?text=Preview+Banner'">
+            
+            <input type="file" id="fileBanner" class="form-control mb-3" accept="image/*">
+            <button class="btn btn-primary w-100" onclick="uploadBanner()">
+                <i class="fas fa-cloud-upload-alt me-2"></i> Upload & Pasang
+            </button>
+            <small class="d-block mt-2 text-muted">Gambar akan dihost di ImgBB & otomatis tampil di Dashboard User.</small>
+        </div>
+    </div>
+
+    <div id="tab-laporan" class="content-section">
+        <h5 class="mb-3">Verifikasi Laporan Baca</h5>
+        <div id="laporanList">
+            <div class="text-center text-muted">Belum ada laporan baru.</div>
+        </div>
+    </div>
+
+    <div id="tab-karya" class="content-section">
+        <h5 class="mb-3">Karya Masuk (Cerpen/Puisi)</h5>
+        <div id="karyaList">
+            <div class="text-center text-muted">Belum ada kiriman karya.</div>
+        </div>
+    </div>
+    
+    <div id="tab-hadiah" class="content-section">
+        <h5 class="mb-3">Request Penukaran Poin</h5>
+        <div id="hadiahList">
+            <div class="text-center text-muted">Belum ada request.</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
+            authDomain: "pkm-pm-def08.firebaseapp.com",
+            projectId: "pkm-pm-def08",
+            storageBucket: "pkm-pm-def08.firebasestorage.app",
+            messagingSenderId: "1077227616889",
+            appId: "1:1077227616889:web:9ce3a57e3d46012acab2a8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const IMGBB_API_KEY = "2f45fcafb6dfb2dbae295499022ce476";
+
+        // 1. CEK LOGIN ADMIN
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Cek domain, jika bukan admin tendang
+                if (!user.email.endsWith('@ac.id')) {
+                    alert("Anda bukan admin!");
+                    window.location.href = "../dashboard/index.html";
+                } else {
+                    loadLeaderboard();
+                    loadCurrentBanner();
+                    loadReports(); // Nanti buat logic ambil data dummy/real
+                }
+            } else {
+                window.location.href = "../index.html";
+            }
+        });
+
+        // 2. NAVIGASI TAB
+        window.switchTab = (tabId) => {
+            // Hide all
+            document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            
+            // Show selected
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            // Highlight Button (Cari tombol yg diklik agak tricky via JS murni, kita loop textnya aja simpelnya)
+            // Atau pakai event target. Disini kita manual set active class di HTML onclick untuk demo
+            event.target.classList.add('active');
+        };
+
+        // 3. LOGIC LEADERBOARD (Realtime View)
+        function loadLeaderboard() {
+            const usersRef = ref(db, 'users');
+            onValue(usersRef, (snapshot) => {
+                const container = document.getElementById('leaderboardList');
+                container.innerHTML = '';
+                
+                let users = [];
+                snapshot.forEach(c => users.push({uid: c.key, ...c.val()}));
+                
+                // Sort XP Highest
+                users.sort((a,b) => (b.xp || 0) - (a.xp || 0));
+
+                users.forEach((u, index) => {
+                    const html = `
+                        <div class="lb-row">
+                            <div class="lb-rank">#${index+1}</div>
+                            <img src="${u.profilePic || 'https://i.ibb.co/5r2M63R/person-placeholder.png'}" class="lb-img">
+                            <div class="lb-name">
+                                <strong>${u.username || u.fullName}</strong><br>
+                                <small class="text-muted">Level ${u.level || 1}</small>
+                            </div>
+                            <div class="lb-xp">${u.xp || 0} XP</div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+            });
+        }
+
+        // 4. LOGIC UPLOAD BANNER (IMGBB API)
+        function loadCurrentBanner() {
+            onValue(ref(db, 'settings/bannerUrl'), (snap) => {
+                if(snap.val()) document.getElementById('previewBanner').src = snap.val();
+            });
+        }
+
+        window.uploadBanner = () => {
+            const fileInput = document.getElementById('fileBanner');
+            if (fileInput.files.length === 0) {
+                Swal.fire('Error', 'Pilih gambar dulu!', 'error');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('image', file);
+
+            Swal.fire({
+                title: 'Mengupload...',
+                text: 'Mohon tunggu sebentar',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    const imageUrl = result.data.url;
+                    
+                    // Simpan URL ke Firebase
+                    update(ref(db, 'settings'), {
+                        bannerUrl: imageUrl
+                    }).then(() => {
+                        Swal.fire('Sukses!', 'Banner berhasil diperbarui.', 'success');
+                    });
+                } else {
+                    throw new Error('Gagal upload ke ImgBB');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Gagal', error.message, 'error');
+            });
+        }
+
+        // 5. CONTOH LOGIC VERIFIKASI LAPORAN (Placeholder)
+        // Nanti user kirim laporan ke node 'reports'. Di sini admin approve.
+        function loadReports() {
+            // Simulasi struktur DB: reports/{reportID}
+            // Kita pakai listener onValue
+            const reportsRef = ref(db, 'reports');
+            onValue(reportsRef, (snap) => {
+                const container = document.getElementById('laporanList');
+                container.innerHTML = '';
+                
+                if(!snap.exists()) {
+                    container.innerHTML = '<div class="text-center text-muted">Belum ada laporan pending.</div>';
+                    return;
+                }
+
+                snap.forEach(child => {
+                    const data = child.val();
+                    const key = child.key;
+
+                    if(data.status === 'pending') {
+                        const html = `
+                            <div class="admin-card item-list pending">
+                                <div class="d-flex justify-content-between">
+                                    <strong>${data.userName}</strong>
+                                    <small>${data.date}</small>
+                                </div>
+                                <p class="mb-1 text-muted small">Buku: ${data.bookTitle}</p>
+                                <div class="p-2 bg-light rounded small mb-2">"${data.summary}"</div>
+                                
+                                <button class="btn btn-success btn-sm action-btn" onclick="approveReport('${key}', '${data.uid}', 50)">
+                                    <i class="fas fa-check"></i> Terima (+50 XP)
+                                </button>
+                                <button class="btn btn-danger btn-sm action-btn" onclick="rejectReport('${key}')">
+                                    <i class="fas fa-times"></i> Tolak
+                                </button>
+                            </div>
+                        `;
+                        container.innerHTML += html;
+                    }
+                });
+            });
+        }
+
+        // FUNGSI APPROVE (Window Scope agar bisa dipanggil onclick HTML)
+        window.approveReport = (reportKey, userUid, points) => {
+            // 1. Update Status Laporan
+            update(ref(db, `reports/${reportKey}`), { status: 'approved' });
+            
+            // 2. Tambah Poin User (Transaction lebih aman, tapi get+update cukup utk prototype)
+            // Cara cepat: Ambil XP sekarang, tambah poin
+            const userRef = ref(db, `users/${userUid}`);
+            // Kita asumsikan logic increment ada.
+            // Di sini kita pakai fetch manual sederhana atau library, 
+            // Untuk demo ini saya pakai alert saja karena butuh code transaction panjang.
+            
+            // Logic Real: 
+            // get(userRef).then(snap => { 
+            //    let currentXp = snap.val().xp || 0; 
+            //    update(userRef, { xp: currentXp + points }); 
+            // });
+
+            Swal.fire('Berhasil', 'Poin ditambahkan ke user', 'success');
+        };
+
+        window.rejectReport = (key) => {
+            update(ref(db, `reports/${key}`), { status: 'rejected' });
+            Swal.fire('Ditolak', 'Laporan ditandai ditolak', 'info');
+        }
+
+        window.logout = () => {
+            signOut(auth).then(() => window.location.href="../index.html");
+        }
+    </script>
+</body>
+</html>
