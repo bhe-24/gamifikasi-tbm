@@ -21,71 +21,44 @@
             text-align: center;
             border-bottom-left-radius: 30px;
             border-bottom-right-radius: 30px;
+            box-shadow: 0 4px 15px rgba(21, 101, 192, 0.3);
         }
 
-        /* Foto Profil dengan Tombol Edit */
         .profile-img-container {
-            position: relative;
-            width: 100px; height: 100px;
-            margin: 0 auto 15px auto;
+            position: relative; width: 100px; height: 100px; margin: 0 auto 15px auto;
         }
         
         .profile-img {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            border: 4px solid rgba(255,255,255,0.3);
-            object-fit: cover;
-            background: #fff;
+            width: 100%; height: 100%; border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.3); object-fit: cover; background: #fff;
         }
 
         .btn-edit-pic {
             position: absolute; bottom: 0; right: 0;
-            background: #FFCA28; color: #333;
-            width: 30px; height: 30px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; border: 2px solid white;
-            font-size: 0.8rem;
+            background: #FFCA28; color: #333; width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white;
         }
 
         .user-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
         .user-level { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; }
 
-        /* Kartu Statistik */
-        .stats-container {
-            display: flex; gap: 15px;
-            margin: -30px 20px 20px 20px;
-        }
-        
+        .stats-container { display: flex; gap: 15px; margin: -30px 20px 20px 20px; }
         .stat-card {
-            flex: 1; background: white; padding: 15px;
-            border-radius: 15px; text-align: center;
+            flex: 1; background: white; padding: 15px; border-radius: 15px; text-align: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
         
         .stat-val { font-weight: 700; font-size: 1.1rem; color: var(--primary-blue); }
         .stat-label { font-size: 0.75rem; color: #888; }
 
-        /* Badge Section */
-        .content-card {
-            background: white; margin: 0 20px 20px 20px; padding: 20px;
-            border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        }
-
-        .badge-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px;
-        }
-        
-        .badge-item { text-align: center; opacity: 0.3; filter: grayscale(100%); } /* Default terkunci */
-        .badge-item.unlocked { opacity: 1; filter: grayscale(0%); }
-        
+        .content-card { background: white; margin: 0 20px 20px 20px; padding: 20px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .badge-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .badge-item { text-align: center; opacity: 0.3; filter: grayscale(100%); transition: all 0.3s;}
+        .badge-item.unlocked { opacity: 1; filter: grayscale(0%); transform: scale(1.1); }
         .badge-icon { font-size: 2rem; color: #FFD700; margin-bottom: 5px; }
         .badge-name { font-size: 0.6rem; font-weight: 600; line-height: 1.2; }
 
-        .btn-logout {
-            width: 90%; display: block; margin: 20px auto;
-            background: #ffebee; color: #d32f2f;
-            border: none; padding: 12px; border-radius: 12px; font-weight: 600;
-        }
+        .btn-logout { width: 90%; display: block; margin: 20px auto; background: #ffebee; color: #d32f2f; border: none; padding: 12px; border-radius: 12px; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -93,7 +66,6 @@
     <div class="profile-header">
         <div class="d-flex justify-content-between align-items-center w-100" style="position:absolute; top:15px; left:0; padding:0 20px;">
             <i class="fas fa-arrow-left text-white" onclick="window.location.href='index.html'" style="cursor:pointer; font-size:1.2rem;"></i>
-            <i class="fas fa-cog text-white" style="cursor:pointer;"></i>
         </div>
 
         <div class="profile-img-container">
@@ -128,7 +100,7 @@
             </div>
             <div class="badge-item" id="badge2">
                 <div class="badge-icon"><i class="fas fa-book-reader"></i></div>
-                <div class="badge-name">Si Rajin</div>
+                <div class="badge-name">Kutu Buku</div>
             </div>
             <div class="badge-item" id="badge3">
                 <div class="badge-icon"><i class="fas fa-crown"></i></div>
@@ -150,10 +122,11 @@
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // CONFIG SERVER SINGAPURA (WAJIB BENAR)
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
-            databaseURL:"https://pkm-pm-def08-default-rtdb.asia-southeast1.firebasedatabase.app",
+            databaseURL: "https://pkm-pm-def08-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "pkm-pm-def08",
             storageBucket: "pkm-pm-def08.firebasestorage.app",
             messagingSenderId: "1077227616889",
@@ -178,81 +151,66 @@
         function loadProfile(uid) {
             const userRef = ref(db, 'users/' + uid);
             onValue(userRef, (snap) => {
+                if(!snap.exists()) return;
+
                 const data = snap.val();
                 
                 // Info Dasar
-                document.getElementById('userName').innerText = data.fullName || "User";
-                document.getElementById('userLevel').innerText = "Level " + (data.level || 1);
-                document.getElementById('totalXP').innerText = data.xp || 0;
+                document.getElementById('userName').innerText = data.username || data.fullName || "User";
                 
-                // Gambar Profil
+                // Hitung Level (Misal tiap 100 XP naik 1 level)
+                const xp = data.xp || 0;
+                const level = Math.floor(xp / 100) + 1;
+                document.getElementById('userLevel').innerText = "Level " + level;
+                
+                // DATA PENTING:
+                document.getElementById('totalXP').innerText = xp;
+                
+                // 👇 INI BAGIAN YANG DULU BELUM AKTIF, SEKARANG SUDAH AKTIF 👇
+                document.getElementById('totalRead').innerText = data.booksRead || 0; 
+                // ----------------------------------------------------------------
+
                 if(data.profilePic) document.getElementById('profilePic').src = data.profilePic;
 
-                // Logika Badge Sederhana (Hardcoded Logic)
-                const xp = data.xp || 0;
-                // Badge 2: Unlock jika XP > 500
-                if(xp >= 500) document.getElementById('badge2').classList.add('unlocked');
-                // Badge 3: Unlock jika XP > 2000 (Misal Level 10)
-                if(xp >= 2000) document.getElementById('badge3').classList.add('unlocked');
+                // LOGIKA BADGE (Contoh)
+                // Badge Kutu Buku: Jika sudah baca > 5 buku
+                if(data.booksRead >= 5) document.getElementById('badge2').classList.add('unlocked');
                 
-                // Hitung Buku Dibaca (Dari Logs)
-                // Fitur ini butuh query logs, sementara kita set dummy atau ambil dari field 'booksRead' jika ada
-                // document.getElementById('totalRead').innerText = data.booksRead || 0;
+                // Badge Sepuh: Jika Level > 5
+                if(level >= 5) document.getElementById('badge3').classList.add('unlocked');
+
+                // Badge Penulis: Jika pernah kirim karya (cek manual atau via flag)
+                // Sementara kita unlock jika XP > 50 (asumsi aktif)
+                if(xp > 200) document.getElementById('badge4').classList.add('unlocked');
             });
         }
 
-        // FUNGSI UPLOAD GAMBAR PROFIL
+        // Upload Gambar
         document.getElementById('fileInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if(!file) return;
 
-            // Loading
-            Swal.fire({
-                title: 'Mengganti Foto...',
-                text: 'Sedang upload, tunggu ya.',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
+            Swal.fire({title:'Mengganti...', didOpen:()=>Swal.showLoading()});
 
             const formData = new FormData();
             formData.append('image', file);
 
-            // Upload ke ImgBB
             fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                method: 'POST',
-                body: formData
+                method: 'POST', body: formData
             })
             .then(res => res.json())
             .then(result => {
                 if(result.success) {
-                    const imgUrl = result.data.url;
-                    // Update ke Firebase
-                    update(ref(db, 'users/' + uid), { profilePic: imgUrl })
-                    .then(() => {
-                        Swal.fire('Sukses', 'Foto profil berhasil diganti!', 'success');
-                    });
-                } else {
-                    throw new Error('Gagal Upload');
+                    update(ref(db, 'users/' + uid), { profilePic: result.data.url })
+                    .then(() => Swal.fire('Sukses', 'Foto profil baru!', 'success'));
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire('Gagal', 'Terjadi kesalahan saat upload.', 'error');
             });
         });
 
         window.logout = () => {
             Swal.fire({
-                title: 'Yakin mau keluar?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, Keluar',
-                cancelButtonText: 'Batal'
-            }).then((res) => {
-                if(res.isConfirmed) {
-                    signOut(auth).then(() => window.location.href="../index.html");
-                }
-            });
+                title: 'Keluar?', icon: 'question', showCancelButton: true, confirmButtonText: 'Ya'
+            }).then(res => { if(res.isConfirmed) signOut(auth).then(()=>window.location.href="../index.html"); });
         }
     </script>
 </body>
