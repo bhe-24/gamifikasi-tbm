@@ -10,102 +10,42 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* TEMA LILAC (UNGU PASTEL) */
-        :root {
-            --theme-color: #D8BFD8;
-            --theme-dark: #8E24AA;
-            --bg-color: #F3E5F5;
-        }
+        :root { --theme-color: #D8BFD8; --theme-dark: #8E24AA; --bg-color: #F3E5F5; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); padding-bottom: 60px; margin: 0; }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-color);
-            padding-bottom: 60px; /* Ruang untuk footer */
-            margin: 0;
-        }
-
-        /* HEADER STICKY */
+        /* HEADER */
         .page-header {
             background: linear-gradient(135deg, #CE93D8, #AB47BC);
-            padding: 15px 20px;
-            display: flex; align-items: center; justify-content: space-between;
-            position: sticky; top: 0; z-index: 100;
-            color: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
+            padding: 15px 20px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
         }
-
         .back-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
         .page-title { font-weight: 700; font-size: 1.1rem; }
 
-        /* BANNER AREA */
-        .banner-wrapper {
-            margin: 20px;
-            border-radius: 15px; overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            background: #fff; min-height: 120px;
-        }
+        /* BANNER */
+        .banner-wrapper { margin: 20px; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #fff; min-height: 120px; }
         .banner-img { width: 100%; height: auto; display: block; }
 
-        /* SEARCH BAR */
+        /* SEARCH */
         .search-box { margin: 0 20px 20px 20px; position: relative; }
-        .search-input {
-            width: 100%; border-radius: 25px; border: none;
-            padding: 12px 20px 12px 45px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            outline: none; color: #444;
-        }
-        .search-icon {
-            position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
-            color: #aaa;
-        }
+        .search-input { width: 100%; border-radius: 25px; border: none; padding: 12px 20px 12px 45px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); outline: none; color: #444; }
+        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa; }
 
-        /* KATEGORI & LIST BUKU */
+        /* KATEGORI */
         .category-section { margin-bottom: 25px; padding-left: 20px; animation: fadeIn 0.5s; }
-        
-        .cat-title {
-            font-weight: 700; color: #6A1B9A; margin-bottom: 10px;
-            border-left: 4px solid #AB47BC; padding-left: 10px;
-            font-size: 1rem;
-        }
-
-        /* Scroll Horizontal yang Mulus */
-        .book-scroller {
-            display: flex; overflow-x: auto; gap: 15px;
-            padding-bottom: 15px; padding-right: 20px;
-            scrollbar-width: none; /* Firefox */
-        }
-        .book-scroller::-webkit-scrollbar { display: none; /* Chrome */ }
+        .cat-title { font-weight: 700; color: #6A1B9A; margin-bottom: 10px; border-left: 4px solid #AB47BC; padding-left: 10px; font-size: 1rem; }
+        .book-scroller { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; padding-right: 20px; scrollbar-width: none; }
+        .book-scroller::-webkit-scrollbar { display: none; }
 
         /* KARTU BUKU */
-        .book-card {
-            min-width: 130px; width: 130px;
-            display: flex; flex-direction: column;
-            cursor: pointer; transition: transform 0.2s;
-        }
+        .book-card { min-width: 130px; width: 130px; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s; }
         .book-card:active { transform: scale(0.95); }
+        .book-cover { width: 100%; height: 190px; border-radius: 10px; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 8px; background: #ddd; }
+        .book-title { font-size: 0.85rem; font-weight: 600; color: #333; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.6em; }
+        .book-author { font-size: 0.75rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .book-cover {
-            width: 100%; height: 190px;
-            border-radius: 10px; object-fit: cover;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-bottom: 8px; background: #ddd;
-        }
-
-        .book-title {
-            font-size: 0.85rem; font-weight: 600; color: #333; line-height: 1.3;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-            height: 2.6em; /* Tinggi tetap untuk 2 baris */
-        }
-        
-        .book-author {
-            font-size: 0.75rem; color: #888;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-
-        /* Footer */
         .footer-text { text-align: center; color: #aaa; font-size: 0.75rem; margin-top: 20px; }
-        
         @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
@@ -128,14 +68,13 @@
 
     <div id="contentArea">
         <div class="text-center p-5 text-muted">
-            <i class="fas fa-spinner fa-spin fa-2x mb-2" style="color:#AB47BC;"></i><br>
-            Sedang mengambil buku...
+            <i class="fas fa-spinner fa-spin fa-2x mb-2" style="color:#AB47BC;"></i><br>Sedang mengambil buku...
         </div>
     </div>
 
     <div class="footer-text">&copy; 2026 TBM Digital</div>
 
-  <script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -157,20 +96,24 @@
         let rawWorks = []; 
         let combinedData = [];
 
+        // 1. Load Banner
         onValue(ref(db, 'settings'), snap => {
             if(snap.val() && snap.val().bannerBacaUrl) document.getElementById('bannerImg').src = snap.val().bannerBacaUrl;
         });
 
-        // LOAD BUKU ADMIN
+        // 2. Load Buku Admin
         onValue(ref(db, 'books'), snap => {
             rawBooks = [];
             if(snap.exists()) {
-                snap.forEach(c => rawBooks.push({type: 'book', id: c.key, ...c.val()}));
+                snap.forEach(c => {
+                    // Pastikan 'type: book' tidak tertimpa data dari firebase
+                    rawBooks.push({ ...c.val(), type: 'book', id: c.key });
+                });
             }
             mergeAndRender();
         });
 
-        // LOAD KARYA WARGA
+        // 3. Load Karya Warga
         onValue(ref(db, 'works'), snap => {
             rawWorks = [];
             if(snap.exists()) {
@@ -178,7 +121,7 @@
                     const val = c.val();
                     if(val.status === 'published') {
                         rawWorks.push({
-                            type: 'work',
+                            type: 'work', // Hardcode type work
                             id: c.key,
                             title: val.title,
                             author: val.authorName, 
@@ -218,20 +161,20 @@
                 let itemsHtml = '';
 
                 itemsInCat.forEach(b => {
-                    // --- LOGIKA UTAMA DI SINI ---
-                    // Jika Tipe BUKU -> Ke Preview
-                    // Jika Tipe KARYA -> Langsung Baca (baca.html) dengan kode WORK_
-                    let onClickAction = "";
+                    // --- LOGIKA TOMBOL DIPERJELAS ---
+                    let targetUrl = "";
                     
-                    if(b.type === 'book') {
-                        onClickAction = `window.location.href='preview-buku.html?id=${b.id}'`;
+                    if (b.type === 'work') {
+                        // JIKA KARYA WARGA -> Langsung BACA
+                        // ID Ditambah "WORK_" agar baca.html tau ini karya warga
+                        targetUrl = `baca.html?id=WORK_${b.id}`;
                     } else {
-                        // Langsung ke baca.html, kasih tanda "WORK_" di depan ID
-                        onClickAction = `window.location.href='baca.html?id=WORK_${b.id}'`;
+                        // JIKA BUKU ADMIN -> Ke PREVIEW
+                        targetUrl = `preview-buku.html?id=${b.id}`;
                     }
 
                     itemsHtml += `
-                        <div class="book-card" onclick="${onClickAction}">
+                        <div class="book-card" onclick="window.location.href='${targetUrl}'">
                             <img src="${b.coverUrl}" class="book-cover" onerror="this.src='https://placehold.co/130x190?text=Cover'">
                             <div class="book-title">${b.title}</div>
                             <div class="book-author">${b.author}</div>
