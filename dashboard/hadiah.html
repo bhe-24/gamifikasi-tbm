@@ -104,19 +104,17 @@
                     const data = snap.val();
                     currentXP = data.xp || 0;
                     document.getElementById('userXP').innerText = currentXP + " XP";
-                    
-                    // Render ulang tombol (enable/disable) kalau XP berubah
                     renderRewards(); 
                 });
 
-                // Load Katalog Hadiah dari Database
+                // Load Katalog Hadiah
                 loadRewards();
             } else {
                 window.location.href = "../index.html";
             }
         });
 
-        // 2. LOAD DATA HADIAH (DARI DATABASE ADMIN)
+        // 2. LOAD DATA HADIAH (DARI ADMIN)
         function loadRewards() {
             onValue(ref(db, 'rewards'), (snap) => {
                 rewardsCatalog = [];
@@ -143,7 +141,6 @@
         // 3. RENDER TAMPILAN
         function renderRewards() {
             const container = document.getElementById('rewardContainer');
-            // Jangan kosongkan container jika data belum siap, tapi kalau kosong ya kosongin
             if(rewardsCatalog.length === 0) return; 
             
             container.innerHTML = '';
@@ -171,37 +168,52 @@
             });
         }
 
-        // 4. LOGIKA TUKAR (KIRIM REQUEST KE ADMIN)
+        // 4. LOGIKA TUKAR (DENGAN CATATAN PENGIRIMAN)
         window.redeemItem = (itemName, price) => {
             Swal.fire({
-                title: 'Tukar Poin?',
-                text: `Tukar ${price} XP untuk ${itemName}? Poin akan dipotong setelah disetujui Admin.`,
-                icon: 'question',
+                title: 'Konfirmasi Penukaran',
+                html: `
+                    <p>Kamu akan menukar <b>${price} XP</b> untuk <b>${itemName}</b>.</p>
+                    <div class="text-start mt-3">
+                        <label class="small fw-bold text-muted">Info Pengiriman (Wajib Diisi):</label>
+                        <p class="small mb-1 text-muted" style="font-size:0.75rem">
+                           - E-Wallet: Tulis No HP & Jenis (Dana/Gopay)<br>
+                           - Barang: Tulis Alamat Lengkap & No WA
+                        </p>
+                    </div>
+                `,
+                input: 'textarea', // Kotak isian
+                inputPlaceholder: 'Contoh: 08123456789 (Dana) a.n Budi',
                 showCancelButton: true,
                 confirmButtonColor: '#E91E63',
-                confirmButtonText: 'Ya, Kirim Permintaan',
-                cancelButtonText: 'Batal'
+                confirmButtonText: 'Kirim Permintaan',
+                cancelButtonText: 'Batal',
+                preConfirm: (info) => {
+                    if (!info) Swal.showValidationMessage('Info pengiriman tidak boleh kosong!')
+                    return info
+                }
             }).then(async (result) => {
                 if (result.isConfirmed) {
+                    const shippingInfo = result.value;
                     Swal.fire({title: 'Memproses...', didOpen:()=>Swal.showLoading()});
                     
                     try {
-                        // Ambil Nama User Terbaru
                         const userSnap = await get(ref(db, `users/${currentUser.uid}`));
                         const userName = userSnap.val().fullName || userSnap.val().username || "User";
 
-                        // Kirim Data ke Tabel 'redemptions' (Permintaan)
+                        // Kirim Data + Catatan ke Admin
                         await push(ref(db, 'redemptions'), {
                             uid: currentUser.uid,
                             userName: userName,
                             rewardName: itemName,
                             cost: price,
-                            status: 'pending', // Status awal Pending
+                            notes: shippingInfo, // <--- Data Catatan Disimpan
+                            status: 'pending', 
                             date: new Date().toLocaleDateString('id-ID'),
                             timestamp: Date.now()
                         });
 
-                        Swal.fire('Berhasil!', 'Permintaan terkirim! Tunggu konfirmasi Admin ya.', 'success');
+                        Swal.fire('Berhasil!', 'Permintaan terkirim! Admin akan mengecek catatanmu.', 'success');
 
                     } catch(e) {
                         console.error(e);
