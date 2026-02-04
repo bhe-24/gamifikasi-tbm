@@ -13,7 +13,6 @@
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #F3E5F5; padding-bottom: 50px; }
         
-        /* HEADER PINK/UNGU (Tema Hadiah) */
         .admin-header {
             background: #D81B60; color: white; padding: 15px 20px;
             display: flex; align-items: center; gap: 15px;
@@ -21,12 +20,10 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        /* TABS NAVIGASI */
         .nav-tabs .nav-link { color: #880E4F; font-weight: 600; border: none; }
         .nav-tabs .nav-link.active { color: #D81B60; border-bottom: 3px solid #D81B60; background: transparent; }
         .tab-content { padding: 20px 0; }
 
-        /* LIST HADIAH (MANAJEMEN) */
         .reward-item {
             background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px;
             display: flex; align-items: center; gap: 15px;
@@ -34,10 +31,9 @@
         }
         .reward-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; background: #eee; }
         
-        /* LIST PERMINTAAN (REQUEST) */
         .request-card {
             background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px;
-            border-left: 5px solid #FFC107; /* Kuning = Pending */
+            border-left: 5px solid #FFC107; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.05); animation: slideUp 0.3s ease;
         }
         .req-user { font-weight: 700; color: #333; }
@@ -75,7 +71,7 @@
                     <form id="addRewardForm">
                         <div class="row g-2">
                             <div class="col-8">
-                                <input type="text" id="itemName" class="form-control form-control-sm" placeholder="Nama Barang (Cth: Buku Tulis)" required>
+                                <input type="text" id="itemName" class="form-control form-control-sm" placeholder="Nama Barang" required>
                             </div>
                             <div class="col-4">
                                 <input type="number" id="itemPoints" class="form-control form-control-sm" placeholder="Harga XP" required>
@@ -97,7 +93,7 @@
             </div>
 
             <div class="tab-pane fade" id="request" role="tabpanel">
-                <h6 class="small text-muted ms-2 mb-3">Siswa Menunggu Konfirmasi</h6>
+                <h6 class="small text-muted ms-2 mb-3">Permintaan Pending</h6>
                 <div id="requestList">
                     <div class="text-center p-4 text-muted"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>
                 </div>
@@ -125,7 +121,7 @@
         const db = getDatabase(app);
         const IMGBB_API_KEY = "2f45fcafb6dfb2dbae295499022ce476";
 
-        // --- 1. LOGIKA TAMBAH HADIAH ---
+        // --- 1. TAMBAH HADIAH ---
         document.getElementById('addRewardForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const file = document.getElementById('itemImg').files[0];
@@ -133,36 +129,29 @@
 
             Swal.fire({title:'Mengupload...', didOpen:()=>Swal.showLoading()});
 
-            // Upload ke ImgBB
             const formData = new FormData(); formData.append('image', file);
             try {
                 const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:'POST', body:formData });
                 const json = await res.json();
                 
                 if(json.success) {
-                    // Simpan ke Firebase
                     await push(ref(db, 'rewards'), {
                         name: document.getElementById('itemName').value,
                         cost: parseInt(document.getElementById('itemPoints').value),
                         imageUrl: json.data.url,
                         timestamp: Date.now()
                     });
-                    
-                    Swal.fire('Sukses', 'Hadiah ditambahkan ke katalog!', 'success');
+                    Swal.fire('Sukses', 'Hadiah ditambahkan!', 'success');
                     document.getElementById('addRewardForm').reset();
                 }
             } catch(err) { Swal.fire('Error', 'Gagal upload', 'error'); }
         });
 
-        // --- 2. LOGIKA TAMPILKAN LIST HADIAH ---
+        // --- 2. LIST HADIAH ---
         onValue(ref(db, 'rewards'), (snap) => {
             const container = document.getElementById('rewardsList');
             container.innerHTML = '';
-            
-            if(!snap.exists()) {
-                container.innerHTML = '<div class="text-center p-4 text-muted">Belum ada hadiah.</div>';
-                return;
-            }
+            if(!snap.exists()) { container.innerHTML = '<div class="text-center p-4 text-muted">Kosong.</div>'; return; }
 
             snap.forEach(c => {
                 const item = c.val();
@@ -173,47 +162,45 @@
                             <div style="font-weight:700; font-size:0.95rem;">${item.name}</div>
                             <div style="color:#D81B60; font-weight:600; font-size:0.85rem;">${item.cost} XP</div>
                         </div>
-                        <button class="btn btn-sm btn-light text-danger" onclick="deleteReward('${c.key}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <button class="btn btn-sm btn-light text-danger" onclick="deleteReward('${c.key}')"><i class="fas fa-trash"></i></button>
                     </div>
                 `;
             });
         });
 
-        window.deleteReward = (key) => {
-            if(confirm('Hapus hadiah ini?')) remove(ref(db, `rewards/${key}`));
-        }
+        window.deleteReward = (key) => { if(confirm('Hapus?')) remove(ref(db, `rewards/${key}`)); }
 
-        // --- 3. LOGIKA PERMINTAAN PENUKARAN (REQUESTS) ---
+        // --- 3. LIST PERMINTAAN (MENAMPILKAN CATATAN) ---
         onValue(ref(db, 'redemptions'), (snap) => {
             const container = document.getElementById('requestList');
             container.innerHTML = '';
             let count = 0;
 
-            if(!snap.exists()) {
-                container.innerHTML = '<div class="text-center p-4 text-muted">Belum ada permintaan.</div>';
-                return;
-            }
+            if(!snap.exists()) { container.innerHTML = '<div class="text-center p-4 text-muted">Belum ada permintaan.</div>'; return; }
 
             snap.forEach(c => {
                 const r = c.val();
-                // Hanya tampilkan yang Pending
                 if(r.status === 'pending') {
                     count++;
                     container.innerHTML += `
                         <div class="request-card">
                             <div class="d-flex justify-content-between">
-                                <div class="req-user">${r.userName}</div>
+                                <div class="req-user"><i class="fas fa-user-circle"></i> ${r.userName}</div>
                                 <div class="req-date">${r.date}</div>
                             </div>
-                            <div class="mb-2">
-                                Ingin menukar <span class="req-item">${r.rewardName}</span> 
+                            <div class="mb-2 mt-2">
+                                Ingin menukar: <span class="req-item">${r.rewardName}</span> 
                                 <span class="badge bg-secondary">${r.cost} XP</span>
                             </div>
+                            
+                            <div class="bg-light p-2 rounded border mb-3 small text-muted">
+                                <strong>Info Pengiriman:</strong><br>
+                                "${r.notes || 'Tidak ada catatan'}"
+                            </div>
+
                             <div class="d-flex gap-2">
                                 <button class="btn-approve flex-grow-1" onclick="processRequest('${c.key}', '${r.uid}', ${r.cost}, true)">
-                                    <i class="fas fa-check"></i> Setujui & Potong Poin
+                                    <i class="fas fa-check"></i> Proses
                                 </button>
                                 <button class="btn-reject" onclick="processRequest('${c.key}', '${r.uid}', 0, false)">
                                     <i class="fas fa-times"></i>
@@ -223,69 +210,45 @@
                     `;
                 }
             });
-
-            if(count === 0) container.innerHTML = '<div class="text-center p-4 text-muted">Semua permintaan sudah diproses.</div>';
+            if(count === 0) container.innerHTML = '<div class="text-center p-4 text-muted">Semua sudah diproses.</div>';
         });
 
-        // --- 4. EKSEKUSI PERMINTAAN (Approve/Reject) ---
+        // --- 4. PROSES REQUEST ---
         window.processRequest = async (reqKey, userUid, cost, isApproved) => {
             if(!isApproved) {
-                // KALO DITOLAK
-                Swal.fire({
-                    title: 'Tolak Permintaan?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Tolak'
-                }).then(async (res) => {
+                Swal.fire({title:'Tolak?', showCancelButton:true, confirmButtonText:'Ya'}).then(async (res) => {
                     if(res.isConfirmed) {
                         await update(ref(db, `redemptions/${reqKey}`), { status: 'rejected' });
-                        Swal.fire('Ditolak', 'Permintaan ditolak.', 'info');
+                        Swal.fire('Ditolak', '', 'info');
                     }
                 });
                 return;
             }
 
-            // KALO DISETUJUI
             Swal.fire({title:'Memproses...', didOpen:()=>Swal.showLoading()});
-            
             try {
-                // Cek Poin User Dulu (Validasi Server-side sederhana)
                 const userSnap = await get(ref(db, `users/${userUid}`));
-                const currentXP = userSnap.val().xp || 0;
+                if((userSnap.val().xp || 0) < cost) { Swal.fire('Gagal', 'Poin user tidak cukup!', 'error'); return; }
 
-                if(currentXP < cost) {
-                    Swal.fire('Gagal', `Poin user tidak cukup! (Sisa: ${currentXP})`, 'error');
-                    return;
-                }
-
-                // 1. Kurangi Poin User
                 await update(ref(db, `users/${userUid}`), { xp: increment(-cost) });
-
-                // 2. Update Status Request
                 await update(ref(db, `redemptions/${reqKey}`), { status: 'approved' });
-
-                // 3. Catat Log ke Dashboard User
+                
+                // CATAT LOG KE RIWAYAT USER
                 await push(ref(db, `logs/${userUid}`), {
                     activity: "Penukaran Hadiah Berhasil",
-                    points: -cost, // Poin minus (merah)
+                    points: -cost,
                     date: new Date().toLocaleDateString('id-ID'),
                     timestamp: Date.now()
                 });
 
-                Swal.fire('Berhasil', 'Poin dipotong & Hadiah disetujui. Segera berikan hadiah ke siswa.', 'success');
-
-            } catch(e) {
-                console.error(e);
-                Swal.fire('Error', 'Terjadi kesalahan sistem.', 'error');
-            }
+                Swal.fire('Berhasil', 'Poin dipotong & Disetujui.', 'success');
+            } catch(e) { Swal.fire('Error', 'Gagal memproses.', 'error'); }
         };
         
-        // Tab Bootstrap Logic (Manual fix for some environments)
-        const triggerTabList = document.querySelectorAll('#myTab button')
-        triggerTabList.forEach(triggerEl => {
-            const tabTrigger = new bootstrap.Tab(triggerEl)
-            triggerEl.addEventListener('click', event => {
-                event.preventDefault()
-                tabTrigger.show()
-            })
-        })
+        // Tab Fix
+        document.querySelectorAll('#myTab button').forEach(el => el.addEventListener('click', e => {
+            e.preventDefault(); new bootstrap.Tab(el).show();
+        }));
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
