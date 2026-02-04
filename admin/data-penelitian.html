@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pusat Data Penelitian PKM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-light">
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class="fas fa-microscope text-primary"></i> Data Penelitian (PKM-PM)</h3>
+            <button class="btn btn-secondary" onclick="window.location.href='index.html'">Kembali</button>
+        </div>
+
+        <div class="card p-4 shadow-sm">
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <p class="text-muted">
+                        Data ini merekam perilaku user: Durasi baca, Pilihan buku (XP/Non-XP), dan Waktu akses.
+                        Gunakan data ini untuk analisis bab Pembahasan.
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-danger" onclick="downloadPDF()">
+                        <i class="fas fa-file-pdf"></i> Unduh Laporan PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered" id="dataTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Nama User</th>
+                            <th>Judul Buku</th>
+                            <th>Tipe Buku (Var)</th>
+                            <th>Aktivitas</th>
+                            <th>Durasi (Detik)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="6" class="text-center">Memuat data riset...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
+            authDomain: "pkm-pm-def08.firebaseapp.com",
+            databaseURL: "https://pkm-pm-def08-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "pkm-pm-def08",
+            storageBucket: "pkm-pm-def08.firebasestorage.app",
+            messagingSenderId: "1077227616889",
+            appId: "1:1077227616889:web:9ce3a57e3d46012acab2a8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        let researchData = [];
+
+        // LOAD DATA RISET
+        onValue(ref(db, 'research_logs'), (snap) => {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            researchData = [];
+
+            if(!snap.exists()) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Belum ada data terekam.</td></tr>';
+                return;
+            }
+
+            snap.forEach(c => {
+                const d = c.val();
+                researchData.push(d);
+            });
+
+            // Urutkan Terbaru
+            researchData.sort((a,b) => b.rawTime - a.rawTime);
+
+            researchData.forEach(d => {
+                // Formatting
+                const typeLabel = d.isXpBook ? 
+                    '<span class="badge bg-success">Eksperimen (XP)</span>' : 
+                    '<span class="badge bg-secondary">Kontrol (No XP)</span>';
+                
+                const html = `
+                    <tr>
+                        <td style="font-size:0.85rem;">${d.timestamp}</td>
+                        <td class="fw-bold">${d.userName}</td>
+                        <td>${d.bookTitle}</td>
+                        <td>${typeLabel}</td>
+                        <td>${d.action}</td>
+                        <td class="text-center fw-bold text-primary">${d.durationSeconds}s</td>
+                    </tr>
+                `;
+                tbody.innerHTML += html;
+            });
+        });
+
+        // FUNGSI DOWNLOAD PDF
+        window.downloadPDF = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.text("Laporan Data Penelitian TBM Digital (PKM-PM)", 14, 20);
+            doc.setFontSize(10);
+            doc.text("Data mencakup durasi baca dan preferensi user terhadap buku ber-XP vs Non-XP", 14, 28);
+
+            doc.autoTable({
+                html: '#dataTable',
+                startY: 35,
+                theme: 'grid',
+                headStyles: { fillColor: [21, 101, 192] }, // Biru
+                styles: { fontSize: 8 }
+            });
+
+            doc.save("Data_Riset_PKM.pdf");
+        }
+    </script>
+</body>
+</html>
