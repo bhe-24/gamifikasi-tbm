@@ -95,14 +95,16 @@
         }
         .menu-label { font-size: 0.7rem; font-weight: 600; line-height: 1.2; }
 
-        /* STYLE KHUSUS RIWAYAT (AGAR JELAS MERAH/HIJAU) */
+        /* --- STYLE KHUSUS RIWAYAT (AGAR JELAS) --- */
         .history-item {
             background: white; padding: 12px 15px; border-radius: 12px; 
             margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-left: 5px solid #ccc;
             transition: transform 0.2s;
         }
+        /* Hijau untuk Tambah Poin */
         .history-item.positive { border-left-color: #4CAF50; }
+        /* Merah untuk Kurang Poin */
         .history-item.negative { border-left-color: #F44336; }
         
         .history-icon {
@@ -171,7 +173,9 @@
 
     <h3 class="section-title"><i class="fas fa-history text-secondary"></i> Aktivitas Terbaru</h3>
     <div style="margin: 0 15px;" id="historyContainer">
-        <div class="text-center text-muted small py-3">Belum ada aktivitas. Yuk baca buku!</div>
+        <div class="text-center text-muted small py-3">
+            <i class="fas fa-spinner fa-spin"></i> Sedang memuat riwayat...
+        </div>
     </div>
 
     <div class="app-footer">&copy; 2026 TBM Digital. <a href="../privacy.html">Kebijakan Privasi</a></div>
@@ -266,9 +270,11 @@
             });
         }
 
-        // 5. LOAD RIWAYAT (DIPERJELAS TAMPILANNYA)
+        // --- 5. LOGIKA RIWAYAT (DIPERBAIKI) ---
         function loadUserHistory(uid) {
             const logsRef = ref(db, `logs/${uid}`);
+            
+            // Mengambil 5 data terakhir dari database
             const logsQuery = query(logsRef, limitToLast(5));
             const container = document.getElementById('historyContainer');
 
@@ -278,10 +284,16 @@
                     return;
                 }
                 
+                // Masukkan data ke Array
                 const logs = [];
-                snapshot.forEach(c => logs.push(c.val()));
-                logs.reverse(); // Urutkan dari yang terbaru
+                snapshot.forEach(c => {
+                    logs.push(c.val());
+                });
 
+                // BALIK URUTANNYA (Agar yang terbaru muncul di paling atas)
+                logs.reverse(); 
+
+                // Render ke HTML
                 container.innerHTML = '';
                 logs.forEach(log => {
                     // LOGIKA VISUAL: Merah (Minus) / Hijau (Plus)
@@ -289,14 +301,17 @@
                     let icon = '<i class="fas fa-circle" style="font-size:0.5rem"></i>';
                     let sign = '';
 
+                    // Jika Poin Tambah (Positif)
                     if(log.points > 0) { 
                         theme = 'positive'; 
                         icon = '<i class="fas fa-arrow-up"></i>';
                         sign = '+';
-                    } else if(log.points < 0) { 
+                    } 
+                    // Jika Poin Kurang (Negatif)
+                    else if(log.points < 0) { 
                         theme = 'negative'; 
                         icon = '<i class="fas fa-arrow-down"></i>';
-                        sign = ''; // Minus sudah ada di angkanya
+                        sign = ''; // Tanda minus sudah otomatis ada di angkanya
                     }
 
                     container.innerHTML += `
