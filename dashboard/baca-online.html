@@ -22,6 +22,13 @@
         }
         .back-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
         .page-title { font-weight: 700; font-size: 1.1rem; }
+        
+        /* LOGO KECIL DI HEADER */
+        .header-logo-small {
+            width: 35px; height: 35px; 
+            background: white; border-radius: 50%; padding: 2px;
+            object-fit: contain; /* Agar logo tidak gepeng */
+        }
 
         /* BANNER */
         .banner-wrapper { margin: 20px; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #fff; min-height: 120px; }
@@ -54,11 +61,11 @@
     <div class="page-header">
         <button class="back-btn" onclick="window.location.href='index.html'"><i class="fas fa-arrow-left"></i></button>
         <div class="page-title">Pustaka Digital</div>
-        <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" style="width:35px; background:white; border-radius:50%; padding:2px;">
+        <img src="https://placehold.co/100?text=Logo" id="headerLogo" class="header-logo-small">
     </div>
 
     <div class="banner-wrapper">
-        <img src="https://placehold.co/600x200/CE93D8/ffffff?text=Memuat+Banner..." id="bannerImg" class="banner-img">
+        <img src="https://placehold.co/600x200/CE93D8/ffffff?text=Selamat+Membaca" id="bannerImg" class="banner-img">
     </div>
 
     <div class="search-box">
@@ -96,9 +103,19 @@
         let rawWorks = []; 
         let combinedData = [];
 
-        // 1. Load Banner
+        // 1. LOAD SETTINGS (Banner & Logo) - PERBAIKAN DI SINI
         onValue(ref(db, 'settings'), snap => {
-            if(snap.val() && snap.val().bannerBacaUrl) document.getElementById('bannerImg').src = snap.val().bannerBacaUrl;
+            const val = snap.val();
+            if(val) {
+                // Update Banner
+                if(val.bannerBacaUrl) {
+                    document.getElementById('bannerImg').src = val.bannerBacaUrl;
+                }
+                // Update Logo (Ini yang tadi kurang)
+                if(val.logoUrl) {
+                    document.getElementById('headerLogo').src = val.logoUrl;
+                }
+            }
         });
 
         // 2. Load Buku Admin
@@ -106,7 +123,6 @@
             rawBooks = [];
             if(snap.exists()) {
                 snap.forEach(c => {
-                    // Pastikan 'type: book' tidak tertimpa data dari firebase
                     rawBooks.push({ ...c.val(), type: 'book', id: c.key });
                 });
             }
@@ -121,7 +137,7 @@
                     const val = c.val();
                     if(val.status === 'published') {
                         rawWorks.push({
-                            type: 'work', // Hardcode type work
+                            type: 'work',
                             id: c.key,
                             title: val.title,
                             author: val.authorName, 
@@ -161,15 +177,10 @@
                 let itemsHtml = '';
 
                 itemsInCat.forEach(b => {
-                    // --- LOGIKA TOMBOL DIPERJELAS ---
                     let targetUrl = "";
-                    
                     if (b.type === 'work') {
-                        // JIKA KARYA WARGA -> Langsung BACA
-                        // ID Ditambah "WORK_" agar baca.html tau ini karya warga
                         targetUrl = `baca.html?id=WORK_${b.id}`;
                     } else {
-                        // JIKA BUKU ADMIN -> Ke PREVIEW
                         targetUrl = `preview-buku.html?id=${b.id}`;
                     }
 
