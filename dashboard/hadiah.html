@@ -11,91 +11,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --primary-pink: #E91E63;
-            --bg-pink-light: #FCE4EC;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-pink-light);
-            padding-bottom: 30px;
-        }
+        :root { --primary-pink: #E91E63; --bg-pink-light: #FCE4EC; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-pink-light); padding-bottom: 30px; }
 
         /* HEADER */
         .page-header {
             background: linear-gradient(135deg, #E91E63, #F48FB1);
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            color: white;
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
-            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.2);
-            position: sticky; top: 0; z-index: 100;
+            padding: 15px 20px; display: flex; align-items: center; color: white;
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.2); position: sticky; top: 0; z-index: 100;
         }
-
-        .btn-back { color: white; font-size: 1.2rem; background: none; border: none; }
+        .btn-back { color: white; font-size: 1.2rem; background: none; border: none; cursor: pointer;}
         .page-title { flex-grow: 1; text-align: center; font-weight: 700; font-size: 1.1rem; margin-right: 20px; }
 
-        /* SALDO XP FLOAT */
+        /* SALDO XP */
         .xp-balance-card {
-            background: white;
-            margin: -20px 20px 20px 20px; /* Overlap header sedikit */
-            padding: 15px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            position: relative;
-            z-index: 101;
+            background: white; margin: -20px 20px 20px 20px; padding: 15px; border-radius: 15px;
+            text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.08); position: relative; z-index: 101;
         }
-
         .xp-label { font-size: 0.8rem; color: #888; }
         .xp-amount { font-size: 1.8rem; font-weight: 700; color: var(--primary-pink); }
 
         /* GRID HADIAH */
-        .reward-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* 2 Kolom */
-            gap: 15px;
-            padding: 0 20px;
-        }
-
+        .reward-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
         .reward-card {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.2s;
+            background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; transition: transform 0.2s;
         }
-
         .reward-card:active { transform: scale(0.98); }
-
-        .reward-img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            background: #eee;
-        }
-
+        .reward-img { width: 100%; height: 120px; object-fit: cover; background: #eee; }
         .reward-info { padding: 10px; text-align: center; flex-grow: 1; }
-        .reward-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; color: #444; }
-        .reward-price { 
-            display: inline-block;
-            background: #FFF0F5; color: var(--primary-pink);
-            padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;
-        }
-
-        .btn-redeem {
-            width: 100%;
-            background: var(--primary-pink);
-            color: white; border: none; padding: 8px;
-            font-size: 0.85rem; font-weight: 600;
-            cursor: pointer;
-        }
-        
+        .reward-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; color: #444; height: 2.5em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;}
+        .reward-price { display: inline-block; background: #FFF0F5; color: var(--primary-pink); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+        .btn-redeem { width: 100%; background: var(--primary-pink); color: white; border: none; padding: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
         .btn-redeem:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
@@ -116,13 +64,17 @@
     </div>
 
     <div class="reward-grid" id="rewardContainer">
+        <div class="text-center w-100 py-5 text-muted col-span-2">
+            <i class="fas fa-spinner fa-spin"></i> Memuat katalog...
         </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, update, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, push, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // CONFIG SERVER SINGAPURA
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -139,40 +91,67 @@
 
         let currentXP = 0;
         let currentUser = null;
+        let rewardsCatalog = [];
 
-        // 1. DATA HADIAH (Hardcoded untuk Prototype)
-        // Nanti bisa dipindah ke database 'products' jika ingin dinamis via admin
-        const rewardsCatalog = [
-            { id: 1, name: "Stiker Keren", price: 200, img: "https://placehold.co/200x200/E91E63/ffffff?text=Stiker" },
-            { id: 2, name: "Pensil 2B", price: 500, img: "https://placehold.co/200x200/9C27B0/ffffff?text=Pensil" },
-            { id: 3, name: "Buku Tulis", price: 1000, img: "https://placehold.co/200x200/2196F3/ffffff?text=Buku" },
-            { id: 4, name: "Voucher Pulsa 5k", price: 2500, img: "https://placehold.co/200x200/4CAF50/ffffff?text=Pulsa" },
-        ];
-
-        // 2. Load User Data
+        // 1. CEK LOGIN & AMBIL DATA USER
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 const userRef = ref(db, 'users/' + user.uid);
+                
+                // Real-time listener untuk XP User
                 onValue(userRef, (snap) => {
                     const data = snap.val();
                     currentXP = data.xp || 0;
                     document.getElementById('userXP').innerText = currentXP + " XP";
-                    renderRewards(); // Render ulang agar tombol enable/disable sesuai XP
+                    
+                    // Render ulang tombol (enable/disable) kalau XP berubah
+                    renderRewards(); 
                 });
+
+                // Load Katalog Hadiah dari Database
+                loadRewards();
             } else {
                 window.location.href = "../index.html";
             }
         });
 
-        // 3. Render Katalog
+        // 2. LOAD DATA HADIAH (DARI DATABASE ADMIN)
+        function loadRewards() {
+            onValue(ref(db, 'rewards'), (snap) => {
+                rewardsCatalog = [];
+                const container = document.getElementById('rewardContainer');
+                
+                if(!snap.exists()) {
+                    container.innerHTML = '<div class="text-center w-100 text-muted" style="grid-column: span 2;">Belum ada hadiah tersedia.</div>';
+                    return;
+                }
+
+                snap.forEach(c => {
+                    const r = c.val();
+                    rewardsCatalog.push({
+                        key: c.key,
+                        name: r.name,
+                        price: r.cost,
+                        img: r.imageUrl
+                    });
+                });
+                renderRewards();
+            });
+        }
+
+        // 3. RENDER TAMPILAN
         function renderRewards() {
             const container = document.getElementById('rewardContainer');
+            // Jangan kosongkan container jika data belum siap, tapi kalau kosong ya kosongin
+            if(rewardsCatalog.length === 0) return; 
+            
             container.innerHTML = '';
 
             rewardsCatalog.forEach(item => {
                 const canBuy = currentXP >= item.price;
                 const btnClass = canBuy ? 'btn-redeem' : 'btn-redeem disabled';
+                const btnText = canBuy ? 'TUKAR SEKARANG' : 'POIN KURANG';
                 
                 const card = `
                     <div class="reward-card">
@@ -184,7 +163,7 @@
                         <button class="${btnClass}" 
                             onclick="redeemItem('${item.name}', ${item.price})" 
                             ${!canBuy ? 'disabled' : ''}>
-                            ${canBuy ? 'TUKAR SEKARANG' : 'POIN KURANG'}
+                            ${btnText}
                         </button>
                     </div>
                 `;
@@ -192,67 +171,45 @@
             });
         }
 
-        // 4. Fungsi Tukar (Window Scope)
+        // 4. LOGIKA TUKAR (KIRIM REQUEST KE ADMIN)
         window.redeemItem = (itemName, price) => {
             Swal.fire({
                 title: 'Tukar Poin?',
-                text: `Kamu akan menukar ${price} XP untuk ${itemName}.`,
+                text: `Tukar ${price} XP untuk ${itemName}? Poin akan dipotong setelah disetujui Admin.`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#E91E63',
-                confirmButtonText: 'Ya, Tukar!',
+                confirmButtonText: 'Ya, Kirim Permintaan',
                 cancelButtonText: 'Batal'
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    processTransaction(itemName, price);
+                    Swal.fire({title: 'Memproses...', didOpen:()=>Swal.showLoading()});
+                    
+                    try {
+                        // Ambil Nama User Terbaru
+                        const userSnap = await get(ref(db, `users/${currentUser.uid}`));
+                        const userName = userSnap.val().fullName || userSnap.val().username || "User";
+
+                        // Kirim Data ke Tabel 'redemptions' (Permintaan)
+                        await push(ref(db, 'redemptions'), {
+                            uid: currentUser.uid,
+                            userName: userName,
+                            rewardName: itemName,
+                            cost: price,
+                            status: 'pending', // Status awal Pending
+                            date: new Date().toLocaleDateString('id-ID'),
+                            timestamp: Date.now()
+                        });
+
+                        Swal.fire('Berhasil!', 'Permintaan terkirim! Tunggu konfirmasi Admin ya.', 'success');
+
+                    } catch(e) {
+                        console.error(e);
+                        Swal.fire('Gagal', 'Terjadi kesalahan koneksi.', 'error');
+                    }
                 }
             });
         };
-
-        // 5. Proses Transaksi (Potong XP)
-        function processTransaction(itemName, price) {
-            const userRef = ref(db, 'users/' + currentUser.uid);
-
-            // Gunakan Transaction untuk keamanan data (Atomic Operation)
-            runTransaction(userRef, (userData) => {
-                if (userData) {
-                    if (userData.xp >= price) {
-                        userData.xp -= price; // Potong XP
-                        return userData;
-                    } else {
-                        return; // Batal jika XP berubah tiba-tiba (misal login di 2 HP)
-                    }
-                }
-                return userData;
-            }).then((result) => {
-                if (result.committed) {
-                    // Jika sukses potong XP:
-                    // 1. Catat Log User
-                    push(ref(db, `logs/${currentUser.uid}`), {
-                        activity: `Menukar ${itemName}`,
-                        points: -price,
-                        date: new Date().toLocaleDateString('id-ID')
-                    });
-
-                    // 2. Kirim Request ke Admin (Tabel Hadiah)
-                    push(ref(db, 'redemptions'), {
-                        uid: currentUser.uid,
-                        userName: result.snapshot.val().username || currentUser.displayName,
-                        item: itemName,
-                        cost: price,
-                        status: 'pending', // Menunggu barang diberikan fisik
-                        timestamp: Date.now()
-                    });
-
-                    Swal.fire('Berhasil!', 'Penukaran berhasil. Tunjukkan ini ke Admin untuk ambil hadiahmu.', 'success');
-                } else {
-                    Swal.fire('Gagal', 'Poin tidak cukup atau terjadi kesalahan.', 'error');
-                }
-            }).catch(err => {
-                console.error(err);
-                Swal.fire('Error', 'Gagal memproses transaksi.', 'error');
-            });
-        }
     </script>
 </body>
 </html>
