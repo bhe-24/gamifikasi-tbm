@@ -95,16 +95,14 @@
         }
         .menu-label { font-size: 0.7rem; font-weight: 600; line-height: 1.2; }
 
-        /* --- STYLE KHUSUS RIWAYAT (AGAR JELAS) --- */
+        /* STYLE KHUSUS RIWAYAT */
         .history-item {
             background: white; padding: 12px 15px; border-radius: 12px; 
             margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-left: 5px solid #ccc;
             transition: transform 0.2s;
         }
-        /* Hijau untuk Tambah Poin */
         .history-item.positive { border-left-color: #4CAF50; }
-        /* Merah untuk Kurang Poin */
         .history-item.negative { border-left-color: #F44336; }
         
         .history-icon {
@@ -155,7 +153,9 @@
             <div id="myRankBadge" style="background:white; color:#1565C0; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.2rem; margin-right:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">-</div>
             <div>
                 <span style="font-size: 0.75rem; display:block; opacity:0.8;">Peringkat Kamu</span>
-                <span style="font-weight:bold; font-size:1rem;" id="myRankName">Memuat...</span>
+                
+                <div style="font-weight:bold; font-size:0.85rem; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="myRankName">Memuat...</div>
+            
             </div>
         </div>
         <div style="text-align:right;">
