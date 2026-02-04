@@ -23,10 +23,9 @@
             margin: 0;
         }
 
-        /* HEADER YANG LEBIH RAPI */
+        /* HEADER */
         .admin-header {
             background: linear-gradient(135deg, #0D47A1, #1565C0);
-            /* Padding bawah agak besar untuk memberi ruang kartu stats melayang */
             padding: 20px 20px 60px 20px; 
             border-bottom-left-radius: 30px;
             border-bottom-right-radius: 30px;
@@ -39,47 +38,75 @@
 
         .header-top {
             display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+            max-width: 1000px; margin-left: auto; margin-right: auto; /* Agar rapi di laptop */
         }
 
         .header-title { font-weight: 700; font-size: 1.3rem; line-height: 1.2; }
         .header-subtitle { font-size: 0.85rem; opacity: 0.9; }
 
-        /* STATS CARD (POSITION FIX) */
+        /* CONTENT CONTAINER (Agar di laptop tidak terlalu lebar) */
+        .main-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* STATS CARD */
         .stats-container {
             display: flex; gap: 15px; 
-            /* Margin negatif agar naik ke atas header */
-            margin: -40px 20px 20px 20px; 
-            position: relative;
-            z-index: 10; /* Pastikan di atas header */
+            margin: -40px 20px 30px 20px; 
         }
 
         .stat-card {
-            flex: 1; background: white; padding: 15px; border-radius: 15px;
+            flex: 1; background: white; padding: 20px; border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08); text-align: center;
+            transition: transform 0.2s;
         }
-        .stat-num { font-size: 1.4rem; font-weight: 700; color: var(--admin-primary); }
-        .stat-label { font-size: 0.75rem; color: #666; font-weight: 600; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--admin-primary); }
+        .stat-label { font-size: 0.85rem; color: #666; font-weight: 600; }
 
-        /* MENU GRID */
+        /* MENU GRID (RESPONSIF) */
         .admin-menu-grid {
             display: grid;
+            gap: 20px; padding: 0 20px; margin-bottom: 20px;
+            /* Default Mobile: 2 Kolom */
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px; padding: 0 20px; margin-bottom: 20px;
+        }
+
+        /* TAMPILAN LAPTOP / TABLET (Layar > 768px) */
+        @media (min-width: 768px) {
+            .admin-menu-grid {
+                /* Laptop: 4 Kolom biar rapi */
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .header-title { font-size: 1.8rem; }
+            .stat-num { font-size: 2.2rem; }
         }
 
         .admin-menu-item {
-            background: white; padding: 20px; border-radius: 15px;
+            background: white; padding: 25px; border-radius: 15px;
             text-decoration: none; color: #444;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); aspect-ratio: 1/1;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); aspect-ratio: 1/1;
+            transition: all 0.2s; position: relative;
         }
-        .menu-icon { font-size: 1.8rem; margin-bottom: 10px; color: var(--admin-primary); }
-        .menu-label { font-weight: 600; font-size: 0.85rem; text-align: center; }
+        .admin-menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            background-color: #fff;
+        }
+
+        .menu-icon { font-size: 2rem; margin-bottom: 12px; color: var(--admin-primary); }
+        .menu-label { font-weight: 600; font-size: 0.9rem; text-align: center; line-height: 1.3; }
 
         /* Badge Pending */
         .badge-pending {
-            background: #D32F2F; color: white; font-size: 0.6rem; padding: 3px 8px;
-            border-radius: 10px; margin-top: 5px; display: none;
+            position: absolute; top: 10px; right: 10px;
+            background: #D32F2F; color: white; font-size: 0.7rem; padding: 4px 8px;
+            border-radius: 12px; display: none; font-weight: bold;
+            box-shadow: 0 2px 5px rgba(211, 47, 47, 0.4);
         }
     </style>
 </head>
@@ -87,63 +114,74 @@
 
     <div class="admin-header">
         <div class="header-top">
-            <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" style="width:40px; background:white; border-radius:50%; padding:2px;">
-            <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; font-size:1.2rem;"></i>
+            <img src="https://i.ibb.co.com/m50m25d/image-removebg-preview-13.png" id="adminLogo" style="width:50px; height:50px; object-fit:contain; background:white; border-radius:50%; padding:3px;">
+            
+            <div onclick="logout()" style="cursor:pointer; background:rgba(255,255,255,0.2); padding:8px 15px; border-radius:20px; font-size:0.9rem; font-weight:600;">
+                <i class="fas fa-sign-out-alt me-2"></i> Keluar
+            </div>
         </div>
         
         <div class="header-title">Admin Panel</div>
-        <div class="header-subtitle">Pantau & Kelola TBM</div>
+        <div class="header-subtitle">Pusat Kontrol TBM Digital</div>
     </div>
 
-    <div class="stats-container">
-        <div class="stat-card">
-            <div class="stat-num" id="countUsers">0</div>
-            <div class="stat-label">Total User</div>
+    <div class="main-container">
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-num" id="countUsers">0</div>
+                <div class="stat-label">Total Siswa</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" id="countReports">0</div>
+                <div class="stat-label">Laporan Baru</div>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-num" id="countReports">0</div>
-            <div class="stat-label">Laporan Baru</div>
+
+        <div class="admin-menu-grid">
+            <a href="kelola-buku.html" class="admin-menu-item">
+                <i class="fas fa-book menu-icon"></i>
+                <span class="menu-label">Kelola<br>Buku</span>
+            </a>
+
+            <a href="laporan.html" class="admin-menu-item">
+                <i class="fas fa-clipboard-check menu-icon" style="color:#43A047;"></i>
+                <span class="menu-label">Cek<br>Laporan</span>
+                <span class="badge-pending" id="badgeLaporan">0</span>
+            </a>
+
+            <a href="karya.html" class="admin-menu-item">
+                <i class="fas fa-pen-fancy menu-icon" style="color:#FB8C00;"></i>
+                <span class="menu-label">Karya<br>Masuk</span>
+                <span class="badge-pending" id="badgeKarya">0</span>
+            </a>
+
+            <a href="hadiah.html" class="admin-menu-item">
+                <i class="fas fa-gift menu-icon" style="color:#E91E63;"></i>
+                <span class="menu-label">Request<br>Hadiah</span>
+                <span class="badge-pending" id="badgeHadiah">0</span>
+            </a>
+
+            <a href="banner.html" class="admin-menu-item">
+                <i class="fas fa-paint-brush menu-icon" style="color:#0097A7;"></i>
+                <span class="menu-label">Tampilan<br>& Logo</span>
+            </a>
+
+            <a href="leaderboard.html" class="admin-menu-item">
+                <i class="fas fa-trophy menu-icon" style="color:#FBC02D;"></i>
+                <span class="menu-label">Pantau<br>Klasemen</span>
+            </a>
+
+            <a href="data-penelitian.html" class="admin-menu-item">
+               <i class="fas fa-microscope menu-icon" style="color:#673AB7;"></i>
+               <span class="menu-label">Data Riset<br>(PKM)</span>
+            </a>
+            
+             <a href="arsip-laporan.html" class="admin-menu-item">
+               <i class="fas fa-archive menu-icon" style="color:#607D8B;"></i>
+               <span class="menu-label">Arsip<br>Laporan</span>
+            </a>
         </div>
-    </div>
-
-    <div class="admin-menu-grid">
-        <a href="kelola-buku.html" class="admin-menu-item">
-            <i class="fas fa-book menu-icon"></i>
-            <span class="menu-label">Kelola<br>Buku</span>
-        </a>
-
-        <a href="laporan.html" class="admin-menu-item">
-            <i class="fas fa-clipboard-check menu-icon" style="color:#43A047;"></i>
-            <span class="menu-label">Cek<br>Laporan</span>
-            <span class="badge-pending" id="badgeLaporan">0</span>
-        </a>
-
-        <a href="karya.html" class="admin-menu-item">
-            <i class="fas fa-pen-fancy menu-icon" style="color:#FB8C00;"></i>
-            <span class="menu-label">Karya<br>Masuk</span>
-            <span class="badge-pending" id="badgeKarya">0</span>
-        </a>
-
-        <a href="hadiah.html" class="admin-menu-item">
-            <i class="fas fa-gift menu-icon" style="color:#E91E63;"></i>
-            <span class="menu-label">Request<br>Hadiah</span>
-            <span class="badge-pending" id="badgeHadiah">0</span>
-        </a>
-
-        <a href="banner.html" class="admin-menu-item">
-            <i class="fas fa-paint-brush menu-icon" style="color:#0097A7;"></i>
-            <span class="menu-label">Tampilan<br>& Logo</span>
-        </a>
-
-        <a href="leaderboard.html" class="admin-menu-item">
-            <i class="fas fa-trophy menu-icon" style="color:#FBC02D;"></i>
-            <span class="menu-label">Pantau<br>Klasemen</span>
-        </a>
-
-        <a href="data-penelitian.html" class="admin-menu-item">
-           <i class="fas fa-microscope menu-icon" style="color:#673AB7;"></i>
-           <span class="menu-label">Data Riset<br>(PKM)</span>
-        </a>
     </div>
 
     <script type="module">
@@ -151,7 +189,7 @@
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // FIREBASE CONFIG (SINGAPURA)
+        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -169,11 +207,23 @@
         onAuthStateChanged(auth, (user) => {
             if (user && user.email.endsWith('@ac.id')) {
                 loadStats();
+                loadLogo(); // Load Logo
             } else {
                 window.location.href = "../index.html";
             }
         });
 
+        // 1. FUNGSI LOAD LOGO DARI DATABASE
+        function loadLogo() {
+            onValue(ref(db, 'settings'), (snap) => {
+                const data = snap.val();
+                if(data && data.logoUrl) {
+                    document.getElementById('adminLogo').src = data.logoUrl;
+                }
+            });
+        }
+
+        // 2. FUNGSI STATISTIK
         function loadStats() {
             onValue(ref(db, 'users'), (snap) => document.getElementById('countUsers').innerText = snap.size || 0);
             
@@ -188,12 +238,18 @@
 
             onValue(ref(db, 'works'), (snap) => {
                 let p = 0; snap.forEach(c => { if(c.val().status==='pending') p++; });
-                if(p>0) document.getElementById('badgeKarya').style.display='inline-block';
+                if(p>0) {
+                    document.getElementById('badgeKarya').style.display='inline-block';
+                    document.getElementById('badgeKarya').innerText = p;
+                }
             });
             
             onValue(ref(db, 'redemptions'), (snap) => {
                 let p = 0; snap.forEach(c => { if(c.val().status==='pending') p++; });
-                if(p>0) document.getElementById('badgeHadiah').style.display='inline-block';
+                if(p>0) {
+                    document.getElementById('badgeHadiah').style.display='inline-block';
+                    document.getElementById('badgeHadiah').innerText = p;
+                }
             });
         }
 
