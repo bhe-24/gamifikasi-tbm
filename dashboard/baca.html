@@ -9,73 +9,65 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        /* VARIASI WARNA (TEMA) */
         :root {
-            --bg-light: #FAF9F6;
-            --text-light: #2c2c2c;
-            --header-light: rgba(250, 249, 246, 0.98);
-            --highlight: #FFF9C4; /* Warna Stabilo Kuning Lembut */
-            
-            --bg-dark: #121212;
-            --text-dark: #E0E0E0;
-            --header-dark: rgba(18, 18, 18, 0.98);
-            --highlight-dark: #3E2723; /* Warna Stabilo Gelap */
+            --bg-light: #FAF9F6; --text-light: #2c2c2c; --header-light: rgba(250, 249, 246, 0.98);
+            --highlight: #FFEB3B; /* Kuning Terang */
+            --bg-dark: #121212; --text-dark: #E0E0E0; --header-dark: rgba(18, 18, 18, 0.98);
+            --highlight-dark: #F57F17; /* Oranye Gelap */
         }
 
         body { 
-            margin: 0; padding: 0; 
-            background-color: var(--bg-light); color: var(--text-light); 
-            transition: background-color 0.3s, color 0.3s; 
-            -webkit-user-select: none; /* Mencegah blok teks biru bawaan browser saat tekan lama */
-            user-select: none;
+            margin: 0; padding: 0; background-color: var(--bg-light); color: var(--text-light); 
+            transition: background 0.3s; user-select: none; -webkit-user-select: none; /* Anti-blok teks biru */
         }
 
-        /* HEADER */
         .reader-header { 
-            position: sticky; top: 0; z-index: 100; 
-            background: var(--header-light); 
-            border-bottom: 1px solid #ddd; padding: 10px 15px; 
-            display: flex; align-items: center; justify-content: space-between; 
-            transition: background 0.3s;
+            position: sticky; top: 0; z-index: 100; background: var(--header-light); 
+            border-bottom: 1px solid #ddd; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; 
         }
 
-        /* AREA BACA */
-        .content-area { 
-            max-width: 700px; margin: 0 auto; 
-            padding: 30px 20px 100px 20px; 
-            font-family: 'Lora', serif; font-size: 18px; line-height: 1.8; 
-            text-align: justify; 
+        /* AREA BACA & FIX JARAK */
+        .content-area { max-width: 700px; margin: 0 auto; padding: 30px 20px 150px 20px; font-family: 'Lora', serif; font-size: 18px; line-height: 1.8; text-align: justify; }
+        
+        /* AGAR MUDAH DIPENCET (Touch Area Luas) */
+        .content-area p, .content-area h1, .content-area h2, .content-area h3, .content-area li, .content-area blockquote {
+            padding: 10px 5px; /* Bantalan sentuh */
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
         }
+
+        /* EFEK DITEKAN */
+        .touch-active { background-color: rgba(0,0,0,0.05); } 
         
-        /* FORMAT TEKS */
-        .content-area p { margin-bottom: 1.5em; display: block; padding: 5px; border-radius: 5px; transition: background 0.3s; cursor: pointer; } 
-        
-        /* EFEK BOOKMARK (STABILO) */
-        .bookmarked-paragraph { background-color: var(--highlight); border-left: 4px solid #FFC107; padding-left: 10px; }
-        
-        .content-area b, .content-area strong { font-weight: 700; color: inherit; }
-        .content-area i, .content-area em { font-style: italic; }
+        /* EFEK DITANDAI (BOOKMARK) */
+        .bookmarked-line { 
+            background-color: var(--highlight) !important; 
+            border-left: 5px solid #FF9800; 
+            padding-left: 15px !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
         .content-area img { max-width: 100%; height: auto; border-radius: 10px; margin: 15px 0; display: block; }
 
-        /* DARK MODE OVERRIDES */
+        /* DARK MODE */
         body.dark-mode { background-color: var(--bg-dark); color: var(--text-dark); }
         body.dark-mode .reader-header { background: var(--header-dark); border-bottom: 1px solid #333; }
         body.dark-mode .fa-arrow-left, body.dark-mode .theme-icon { color: #E0E0E0 !important; }
-        body.dark-mode .bookmarked-paragraph { background-color: var(--highlight-dark); border-left-color: #FF9800; }
+        body.dark-mode .touch-active { background-color: rgba(255,255,255,0.1); }
+        body.dark-mode .bookmarked-line { background-color: var(--highlight-dark) !important; color: white; }
 
-        /* TIMER XP */
         .timer-container { position: relative; width: 40px; height: 40px; display: none; align-items: center; justify-content: center; }
         .xp-label { position: absolute; font-size: 0.6rem; font-weight: 900; font-family: 'Poppins', sans-serif; color: #FB8C00; }
         .progress-ring__circle { transition: stroke-dashoffset 1s linear; transform: rotate(-90deg); transform-origin: 50% 50%; }
-
-        .btn-finish { background: #4CAF50; color: white; border: none; padding: 12px 30px; border-radius: 50px; width: 100%; font-weight: 600; margin-top: 50px; }
-        .theme-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #555; transition: 0.2s; }
+        .btn-finish { background: #4CAF50; color: white; border: none; padding: 12px 30px; border-radius: 50px; width: 100%; font-weight: 600; }
+        .theme-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #555; }
         
-        /* Instruksi kecil */
         .hint-toast {
             position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.7); color: white; padding: 8px 15px; border-radius: 20px;
-            font-size: 0.75rem; pointer-events: none; opacity: 0; transition: opacity 0.5s;
+            background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 30px;
+            font-size: 0.8rem; pointer-events: none; opacity: 0; transition: opacity 0.5s; z-index: 999;
         }
     </style>
 </head>
@@ -84,7 +76,7 @@
     <div class="reader-header">
         <i class="fas fa-arrow-left" onclick="handleExit()" style="font-size:1.2rem; cursor:pointer; color:#555;"></i>
         <div style="font-family:'Poppins'; font-size:0.85rem; font-weight:600; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="rTitle">Memuat...</div>
-        <div class="d-flex align-items-center gap-3" style="display:flex; gap:15px;">
+        <div class="d-flex align-items-center gap-3">
             <button class="theme-btn" onclick="toggleTheme()"><i class="fas fa-moon theme-icon" id="themeIcon"></i></button>
             <div class="timer-container" id="xpTimer">
                 <svg width="36" height="36">
@@ -93,14 +85,14 @@
                 </svg>
                 <div class="xp-label">XP</div>
             </div>
-            <i class="fas fa-bookmark text-muted" id="bookmarkIcon" style="font-size:0.8rem;" title="Bookmark aktif"></i>
+            <i class="fas fa-bookmark text-muted" id="bmIndicator" style="font-size:0.9rem;" title="Bookmark"></i>
         </div>
     </div>
 
-    <div class="content-area" id="rContent">Mengambil data...</div>
-    <div style="text-align:center; padding-bottom:100px;"><button class="btn-finish" onclick="finishReading()">Selesai Baca</button></div>
+    <div class="content-area" id="rContent">Sedang memuat naskah...</div>
+    <div style="text-align:center;"><button class="btn-finish" onclick="finishReading()">Selesai Baca</button></div>
     
-    <div class="hint-toast" id="hintToast">Tekan lama paragraf untuk menandai</div>
+    <div class="hint-toast" id="hintToast">Tekan & Tahan paragraf untuk menandai</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -126,8 +118,8 @@
         let bookData = {};
         let startTime = Date.now(); 
         let isXpEnabled = false; 
-        
-        // --- 1. TEMA & UI ---
+
+        // --- 1. TEMA ---
         window.toggleTheme = () => {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
@@ -139,7 +131,7 @@
             document.getElementById('themeIcon').className = 'fas fa-sun theme-icon';
         }
 
-        // --- 2. TIMER XP (PERSISTENT) ---
+        // --- 2. TIMER XP ---
         let savedProgress = localStorage.getItem('xpProgress');
         let timerSeconds = savedProgress ? parseInt(savedProgress) : 0;
         const XP_INTERVAL = 300; 
@@ -153,7 +145,7 @@
         }
         setProgress((timerSeconds / XP_INTERVAL) * 100);
 
-        // --- 3. LOGIN CHECK ---
+        // --- 3. LOGIN & LOAD ---
         onAuthStateChanged(auth, (user) => {
             if(user) {
                 currentUser = user;
@@ -162,7 +154,6 @@
             } else window.location.href = "../index.html";
         });
 
-        // --- 4. LOAD BUKU & KONTEN ---
         function loadBook() {
             const params = new URLSearchParams(window.location.search);
             const rawId = params.get('id');
@@ -173,101 +164,118 @@
                     bookData = snap.val();
                     bookData.id = rawId; 
                     document.getElementById('rTitle').innerText = bookData.title;
-                    
-                    // RENDER KONTEN
-                    const contentDiv = document.getElementById('rContent');
-                    contentDiv.innerHTML = bookData.content;
+                    document.getElementById('rContent').innerHTML = bookData.content;
 
-                    // A. Setup Timer XP
                     isXpEnabled = (bookData.isXpActive !== false); 
                     if(isXpEnabled) {
                         document.getElementById('xpTimer').style.display = 'flex';
                         startXpTimer();
                     }
 
-                    // B. Setup BOOKMARK FEATURE (Ini yang baru!)
-                    setupBookmarkFeature(rawId);
+                    // --- INISIALISASI BOOKMARK (DIPERBAIKI) ---
+                    setTimeout(() => initBookmarkSystem(rawId), 500); 
 
                     logResearchData("MEMBUKA_BUKU", 0);
-                    
-                    // Munculkan instruksi kecil
-                    setTimeout(() => document.getElementById('hintToast').style.opacity = '1', 2000);
-                    setTimeout(() => document.getElementById('hintToast').style.opacity = '0', 6000);
+                    showHint();
                 }
             });
         }
 
-        // --- 5. LOGIKA BOOKMARK (PRESS & SAVE) ---
-        function setupBookmarkFeature(bookId) {
-            const paragraphs = document.querySelectorAll('.content-area p');
-            const bookmarkKey = `bookmark_${currentUser.uid}_${bookId}`; // Key unik per User & Buku
+        // --- 4. SISTEM BOOKMARK BARU (LEBIH PRESISI) ---
+        function initBookmarkSystem(bookId) {
+            const container = document.getElementById('rContent');
+            // Pilih semua elemen teks yang mungkin dibaca
+            const textBlocks = container.querySelectorAll('p, h1, h2, h3, h4, li, blockquote, div');
+            
+            // Beri ID unik ke setiap elemen (Nomor Absen) agar posisinya akurat
+            textBlocks.forEach((el, index) => {
+                // Pastikan elemen punya teks (bukan kosong)
+                if(el.innerText.trim().length > 3) {
+                    el.setAttribute('data-index', index); // ID Internal
+                    addLongPressListener(el, index, bookId);
+                }
+            });
 
-            // A. CEK APAKAH ADA BOOKMARK TERSIMPAN?
-            const savedIndex = localStorage.getItem(bookmarkKey);
-            if(savedIndex !== null) {
-                const targetP = paragraphs[savedIndex];
-                if(targetP) {
+            // Cek Bookmark Tersimpan
+            const savedIndex = localStorage.getItem(`bookmark_${currentUser.uid}_${bookId}`);
+            if(savedIndex) {
+                // Cari elemen dengan ID yang disimpan
+                const target = container.querySelector(`[data-index='${savedIndex}']`);
+                if(target) {
+                    document.getElementById('bmIndicator').className = "fas fa-bookmark text-warning"; // Icon nyala
+                    
                     Swal.fire({
                         title: 'Lanjut Baca?',
-                        text: 'Kamu punya penanda di buku ini.',
+                        text: 'Terakhir kamu baca sampai baris yang ditandai.',
                         icon: 'info',
                         showCancelButton: true,
-                        confirmButtonText: 'Ya, Lanjut',
+                        confirmButtonText: 'Lanjut',
                         cancelButtonText: 'Mulai Awal',
                         confirmButtonColor: '#1565C0'
                     }).then((res) => {
                         if(res.isConfirmed) {
-                            // Scroll ke paragraf & Highlight
-                            targetP.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            targetP.classList.add('bookmarked-paragraph');
+                            // Scroll setelah delay agar layout stabil
+                            setTimeout(() => {
+                                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                target.classList.add('bookmarked-line');
+                            }, 300);
                         }
                     });
                 }
             }
-
-            // B. PASANG LISTENER TEKAN LAMA (LONG PRESS)
-            let pressTimer;
-
-            paragraphs.forEach((p, index) => {
-                // TOUCH START (Mulai tekan)
-                p.addEventListener('touchstart', (e) => {
-                    pressTimer = setTimeout(() => {
-                        saveBookmark(index, bookmarkKey);
-                    }, 800); // 800ms tahan
-                });
-
-                // TOUCH END/MOVE (Lepas atau Geser = Batal)
-                p.addEventListener('touchend', () => clearTimeout(pressTimer));
-                p.addEventListener('touchmove', () => clearTimeout(pressTimer));
-
-                // UNTUK LAPTOP (Klik Kanan/Tahan Mouse)
-                p.addEventListener('mousedown', () => {
-                    pressTimer = setTimeout(() => {
-                        saveBookmark(index, bookmarkKey);
-                    }, 800);
-                });
-                p.addEventListener('mouseup', () => clearTimeout(pressTimer));
-            });
         }
 
-        function saveBookmark(index, key) {
-            // Hapus highlight lama
-            document.querySelectorAll('.bookmarked-paragraph').forEach(el => el.classList.remove('bookmarked-paragraph'));
-            
-            // Simpan index baru
-            localStorage.setItem(key, index);
-            
-            // Tambah highlight visual
-            const paragraphs = document.querySelectorAll('.content-area p');
-            if(paragraphs[index]) paragraphs[index].classList.add('bookmarked-paragraph');
+        function addLongPressListener(element, index, bookId) {
+            let pressTimer;
 
-            // Feedback Getar (Haptic) & Toast
+            // Touch (HP)
+            element.addEventListener('touchstart', () => {
+                element.classList.add('touch-active'); // Efek visual ditekan
+                pressTimer = setTimeout(() => saveBookmark(element, index, bookId), 600); // 600ms tahan
+            });
+
+            element.addEventListener('touchend', () => {
+                clearTimeout(pressTimer);
+                element.classList.remove('touch-active');
+            });
+            
+            element.addEventListener('touchmove', () => {
+                clearTimeout(pressTimer); // Batal kalau digeser (scroll)
+                element.classList.remove('touch-active');
+            });
+
+            // Mouse (Laptop - Klik Tahan)
+            element.addEventListener('mousedown', () => {
+                pressTimer = setTimeout(() => saveBookmark(element, index, bookId), 600);
+            });
+            element.addEventListener('mouseup', () => clearTimeout(pressTimer));
+        }
+
+        function saveBookmark(element, index, bookId) {
+            // Hapus bookmark lama di layar
+            document.querySelectorAll('.bookmarked-line').forEach(el => el.classList.remove('bookmarked-line'));
+            
+            // Simpan ke memori HP
+            localStorage.setItem(`bookmark_${currentUser.uid}_${bookId}`, index);
+            
+            // Tampilan Baru
+            element.classList.add('bookmarked-line');
+            document.getElementById('bmIndicator').className = "fas fa-bookmark text-warning";
+
+            // Feedback Getar
             if (navigator.vibrate) navigator.vibrate(50);
-            const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+            
+            const Toast = Swal.mixin({ toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
             Toast.fire({ icon: 'success', title: 'Ditandai!' });
         }
 
-        // --- 6. FUNGSI LAIN (TIMER & DATA) ---
+        function showHint() {
+            const toast = document.getElementById('hintToast');
+            setTimeout(() => toast.style.opacity = '1', 2000);
+            setTimeout(() => toast.style.opacity = '0', 6000);
+        }
+
+        // --- 5. LOGIKA TIMER & DATA ---
         function startXpTimer() {
             setInterval(() => {
                 timerSeconds++;
@@ -283,9 +291,7 @@
 
         function addXP() {
             update(ref(db, 'users/' + currentUser.uid), { xp: increment(2) });
-            push(ref(db, `logs/${currentUser.uid}`), {
-                activity: "Bonus Membaca", points: 2, date: new Date().toLocaleDateString('id-ID'), timestamp: Date.now()
-            });
+            push(ref(db, `logs/${currentUser.uid}`), { activity: "Bonus Membaca", points: 2, date: new Date().toLocaleDateString('id-ID'), timestamp: Date.now() });
             const label = document.querySelector('.xp-label');
             label.style.color = "#4CAF50"; label.innerText = "+2";
             setTimeout(() => { label.style.color = "#FB8C00"; label.innerText = "XP"; }, 2000);
