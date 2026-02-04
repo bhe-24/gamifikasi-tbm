@@ -18,6 +18,7 @@
             background: #0D47A1; color: white; padding: 15px 20px;
             display: flex; align-items: center; gap: 15px;
             position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .card-form {
@@ -29,10 +30,15 @@
             background: white; padding: 15px; margin: 0 20px 10px 20px;
             border-radius: 10px; display: flex; align-items: center; gap: 15px;
             border-left: 5px solid #0D47A1;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         .book-thumb { width: 50px; height: 70px; object-fit: cover; border-radius: 5px; background: #eee; }
-        .btn-delete { background: #ffebee; color: #c62828; border: none; padding: 8px 12px; border-radius: 8px; }
+        .btn-delete { background: #ffebee; color: #c62828; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;}
+        
+        /* Badge Riset */
+        .badge-xp { font-size: 0.65rem; padding: 3px 6px; border-radius: 4px; background: #E8F5E9; color: #2E7D32; border: 1px solid #2E7D32; }
+        .badge-no-xp { font-size: 0.65rem; padding: 3px 6px; border-radius: 4px; background: #FFEBEE; color: #C62828; border: 1px solid #C62828; }
     </style>
 </head>
 <body>
@@ -59,19 +65,28 @@
                     <option value="Cerita Rakyat">Cerita Rakyat</option>
                 </select>
             </div>
+            
+            <div class="mb-2">
+                <select id="isXpActive" class="form-control text-primary" style="font-weight:600; border:1px solid #1565C0;">
+                    <option value="true">✅ Mode Eksperimen (Dapat XP)</option>
+                    <option value="false">⛔ Mode Kontrol (Tanpa XP)</option>
+                </select>
+                <small class="text-muted" style="font-size:0.7rem;">Pilih 'Tanpa XP' untuk menguji motivasi siswa tanpa hadiah.</small>
+            </div>
+
             <div class="mb-2">
                 <label class="small text-muted">Cover Buku</label>
                 <input type="file" id="coverFile" class="form-control" accept="image/*" required>
             </div>
             <div class="mb-3">
-                <textarea id="sinopsis" class="form-control" rows="5" placeholder="Sinopsis / Isi Cerita (Bisa Copy Paste disini)..." required></textarea>
+                <textarea id="sinopsis" class="form-control" rows="5" placeholder="Isi Cerita (Copy Paste di sini)..." required></textarea>
             </div>
             <button type="submit" class="btn btn-primary w-100">UPLOAD BUKU</button>
         </form>
     </div>
 
     <h6 class="ms-4 mt-4 mb-2 text-muted">Daftar Buku Tersedia</h6>
-    <div id="bookList">
+    <div id="bookList" style="padding-bottom: 30px;">
         <div class="text-center p-3 text-muted">Memuat...</div>
     </div>
 
@@ -79,6 +94,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // CONFIG SERVER SINGAPURA
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -102,7 +118,7 @@
             if(!file) return;
 
             // Loading UI
-            Swal.fire({ title: 'Sedang Upload...', text: 'Mengirim gambar ke server..', didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Sedang Upload...', text: 'Mengirim data ke server..', didOpen: () => Swal.showLoading() });
 
             // A. Upload Gambar ke ImgBB
             const formData = new FormData();
@@ -114,6 +130,7 @@
                 
                 if(dataImg.success) {
                     const imgUrl = dataImg.data.url;
+                    const isXp = document.getElementById('isXpActive').value === "true"; // Cek mode riset
                     
                     // B. Simpan Data ke Firebase
                     const newBookRef = push(ref(db, 'books'));
@@ -121,7 +138,8 @@
                         title: document.getElementById('judul').value,
                         author: document.getElementById('penulis').value,
                         category: document.getElementById('kategori').value,
-                        content: document.getElementById('sinopsis').value, // Disini isi cerita disimpan
+                        content: document.getElementById('sinopsis').value,
+                        isXpActive: isXp, // DATA PENTING UNTUK RISET
                         coverUrl: imgUrl,
                         views: 0,
                         timestamp: Date.now()
@@ -133,7 +151,8 @@
                     throw new Error('Gagal upload gambar');
                 }
             } catch (err) {
-                Swal.fire('Error', err.message, 'error');
+                console.error(err);
+                Swal.fire('Error', 'Gagal upload: ' + err.message, 'error');
             }
         });
 
@@ -151,12 +170,18 @@
                 const b = child.val();
                 const key = child.key;
                 
+                // Label Riset
+                const xpLabel = (b.isXpActive !== false) 
+                    ? '<span class="badge-xp">XP Aktif</span>' 
+                    : '<span class="badge-no-xp">Tanpa XP (Kontrol)</span>';
+
                 const html = `
                     <div class="book-item">
                         <img src="${b.coverUrl}" class="book-thumb">
                         <div style="flex-grow:1;">
                             <div style="font-weight:600; font-size:0.9rem;">${b.title}</div>
-                            <div style="font-size:0.75rem; color:#666;">${b.author} (${b.category})</div>
+                            <div style="font-size:0.75rem; color:#666;">${b.author}</div>
+                            <div class="mt-1">${xpLabel}</div>
                         </div>
                         <button class="btn-delete" onclick="deleteBook('${key}')"><i class="fas fa-trash"></i></button>
                     </div>
@@ -167,9 +192,19 @@
 
         // 3. FUNGSI HAPUS (Global Scope)
         window.deleteBook = (key) => {
-            if(confirm('Hapus buku ini?')) {
-                remove(ref(db, 'books/' + key));
-            }
+            Swal.fire({
+                title: 'Hapus Buku?',
+                text: "Data tidak bisa dikembalikan.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    remove(ref(db, 'books/' + key));
+                    Swal.fire('Terhapus!', 'Buku telah dihapus.', 'success');
+                }
+            });
         }
     </script>
 </body>
