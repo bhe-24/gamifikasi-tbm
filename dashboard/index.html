@@ -71,7 +71,7 @@
         .user-lb-name { font-size: 0.9rem; font-weight: 600; color: #444; }
         .user-lb-points { font-size: 0.8rem; color: var(--primary-blue); font-weight: 700; }
 
-        /* POSISI USER (INI YANG KITA PERBAIKI) */
+        /* POSISI USER */
         .my-rank-bar {
             background: var(--primary-blue); color: white; 
             margin: 0 15px 25px 15px; padding: 15px 20px;
@@ -79,7 +79,6 @@
             box-shadow: 0 5px 15px rgba(21, 101, 192, 0.3);
             position: relative; overflow: hidden;
         }
-        /* Efek hiasan background */
         .my-rank-bar::after {
             content: ""; position: absolute; right: -20px; bottom: -20px;
             width: 80px; height: 80px; background: rgba(255,255,255,0.1);
@@ -95,6 +94,31 @@
             box-shadow: 0 3px 8px rgba(0,0,0,0.05);
         }
         .menu-label { font-size: 0.7rem; font-weight: 600; line-height: 1.2; }
+
+        /* STYLE KHUSUS RIWAYAT (AGAR JELAS MERAH/HIJAU) */
+        .history-item {
+            background: white; padding: 12px 15px; border-radius: 12px; 
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-left: 5px solid #ccc;
+            transition: transform 0.2s;
+        }
+        .history-item.positive { border-left-color: #4CAF50; }
+        .history-item.negative { border-left-color: #F44336; }
+        
+        .history-icon {
+            width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; margin-right: 12px; font-size: 0.9rem;
+        }
+        .positive .history-icon { background: #E8F5E9; color: #4CAF50; }
+        .negative .history-icon { background: #FFEBEE; color: #F44336; }
+
+        .history-detail { flex-grow: 1; }
+        .history-title { font-weight: 600; font-size: 0.85rem; color: #444; }
+        .history-date { font-size: 0.7rem; color: #999; }
+        
+        .history-points { font-weight: 700; font-size: 0.95rem; }
+        .positive .history-points { color: #4CAF50; }
+        .negative .history-points { color: #F44336; }
 
         /* FOOTER FIXED */
         .app-footer {
@@ -121,16 +145,12 @@
 
     <h3 class="section-title"><i class="fas fa-trophy text-warning"></i> Top Pembaca Hari Ini</h3>
     <div class="leaderboard-card" id="topThreeContainer">
-        <div class="text-center text-muted small py-3">
-            <i class="fas fa-spinner fa-spin"></i> Memuat...
-        </div>
+        <div class="text-center text-muted small py-3"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>
     </div>
 
     <div class="my-rank-bar">
         <div class="d-flex align-items-center">
-            <div id="myRankBadge" style="background:white; color:#1565C0; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.2rem; margin-right:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-                -
-            </div>
+            <div id="myRankBadge" style="background:white; color:#1565C0; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.2rem; margin-right:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">-</div>
             <div>
                 <span style="font-size: 0.75rem; display:block; opacity:0.8;">Peringkat Kamu</span>
                 <span style="font-weight:bold; font-size:1rem;" id="myRankName">Memuat...</span>
@@ -151,19 +171,17 @@
 
     <h3 class="section-title"><i class="fas fa-history text-secondary"></i> Aktivitas Terbaru</h3>
     <div style="margin: 0 15px;" id="historyContainer">
-        <div class="text-center text-muted small py-3">Belum ada aktivitas.</div>
+        <div class="text-center text-muted small py-3">Belum ada aktivitas. Yuk baca buku!</div>
     </div>
 
-    <div class="app-footer">
-        &copy; 2026 TBM Digital. <a href="../privacy.html">Kebijakan Privasi</a>
-    </div>
+    <div class="app-footer">&copy; 2026 TBM Digital. <a href="../privacy.html">Kebijakan Privasi</a></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // --- KONFIGURASI SERVER SINGAPURA ---
+        // CONFIG SERVER SINGAPURA
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -181,9 +199,8 @@
         // 1. CEK STATUS LOGIN & LOAD DATA
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // User login, ambil data
                 loadUserProfile(user);
-                loadLeaderboardAndRank(user.uid); // <--- LOGIKA GABUNGAN
+                loadLeaderboardAndRank(user.uid);
                 loadUserHistory(user.uid);
                 loadSettings(); 
             } else {
@@ -191,10 +208,8 @@
             }
         });
 
-        // 2. FUNGSI LOAD BANNER & LOGO
         function loadSettings() {
-            const settingsRef = ref(db, 'settings');
-            onValue(settingsRef, (snap) => {
+            onValue(ref(db, 'settings'), (snap) => {
                 const data = snap.val();
                 if(data) {
                     if(data.bannerUrl) document.getElementById('dynamicBanner').src = data.bannerUrl;
@@ -203,88 +218,55 @@
             });
         }
 
-        // 3. LOAD PROFIL (Nama & Foto)
         function loadUserProfile(user) {
-            const userRef = ref(db, 'users/' + user.uid);
-            onValue(userRef, (snapshot) => {
+            onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                 let pic = "https://i.ibb.co/5r2M63R/person-placeholder.png";
                 let name = "User";
-
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     pic = data.profilePic || pic;
                     name = data.username || data.fullName || name;
                 }
                 document.getElementById('userProfilePic').src = pic;
-                document.getElementById('myRankName').innerText = name; // Update nama di bar biru
+                document.getElementById('myRankName').innerText = name; 
             });
         }
 
-        // 4. LOAD LEADERBOARD & HITUNG PERINGKAT SAYA
         function loadLeaderboardAndRank(currentUid) {
-            const container = document.getElementById('topThreeContainer');
-            const usersRef = ref(db, 'users');
-
-            onValue(usersRef, (snapshot) => {
+            onValue(ref(db, 'users'), (snapshot) => {
+                const container = document.getElementById('topThreeContainer');
                 container.innerHTML = ''; 
-
-                if (!snapshot.exists()) {
-                    container.innerHTML = '<div class="text-center small py-3 text-muted">Belum ada pembaca lain.</div>';
-                    return;
-                }
+                if (!snapshot.exists()) return;
 
                 let users = [];
                 snapshot.forEach((child) => {
                     const u = child.val();
-                    users.push({
-                        uid: child.key, // Simpan UID untuk pencarian
-                        username: u.username || u.fullName || "User",
-                        xp: u.xp || 0,
-                        pic: u.profilePic || "https://i.ibb.co/5r2M63R/person-placeholder.png"
-                    });
+                    users.push({ uid: child.key, username: u.username||u.fullName||"User", xp: u.xp||0, pic: u.profilePic||"https://i.ibb.co/5r2M63R/person-placeholder.png" });
                 });
 
-                // Urutkan dari XP Terbesar
                 users.sort((a, b) => b.xp - a.xp);
 
-                // A. TAMPILKAN TOP 3
                 users.slice(0, 3).forEach((u, i) => {
-                    const rankClass = i === 0 ? 'rank-1' : (i === 1 ? 'rank-2' : 'rank-3');
-                    const crown = i === 0 ? '<i class="fas fa-crown text-warning ms-auto"></i>' : '';
-                    
-                    const html = `
+                    const rankClass = i===0?'rank-1':(i===1?'rank-2':'rank-3');
+                    const crown = i===0?'<i class="fas fa-crown text-warning ms-auto"></i>':'';
+                    container.innerHTML += `
                         <div class="top-user ${rankClass}">
                             <div class="rank-badge">${i + 1}</div>
                             <img src="${u.pic}" style="width:35px; height:35px; border-radius:50%; margin-right:10px; object-fit:cover;">
-                            <div class="user-lb-info">
-                                <span class="user-lb-name">${u.username}</span>
-                                <span class="user-lb-points">${u.xp} XP</span>
-                            </div>
+                            <div class="user-lb-info"><span class="user-lb-name">${u.username}</span><span class="user-lb-points">${u.xp} XP</span></div>
                             ${crown}
-                        </div>
-                    `;
-                    container.innerHTML += html;
+                        </div>`;
                 });
 
-                // B. HITUNG POSISI SAYA (PERINGKAT BERAPA?)
-                let myRank = "-";
-                let myXP = 0;
-                
-                // Cari user saya ada di index berapa
                 const myIndex = users.findIndex(u => u.uid === currentUid);
-                
                 if(myIndex !== -1) {
-                    myRank = myIndex + 1; // Karena index mulai dari 0
-                    myXP = users[myIndex].xp;
+                    document.getElementById('myRankBadge').innerText = "#" + (myIndex + 1);
+                    document.getElementById('myRankPoints').innerText = users[myIndex].xp + " XP";
                 }
-
-                // Update Tampilan Bar Biru
-                document.getElementById('myRankBadge').innerText = "#" + myRank;
-                document.getElementById('myRankPoints').innerText = myXP + " XP";
             });
         }
 
-        // 5. LOAD HISTORY (RIWAYAT)
+        // 5. LOAD RIWAYAT (DIPERJELAS TAMPILANNYA)
         function loadUserHistory(uid) {
             const logsRef = ref(db, `logs/${uid}`);
             const logsQuery = query(logsRef, limitToLast(5));
@@ -298,23 +280,36 @@
                 
                 const logs = [];
                 snapshot.forEach(c => logs.push(c.val()));
-                logs.reverse(); 
+                logs.reverse(); // Urutkan dari yang terbaru
 
                 container.innerHTML = '';
                 logs.forEach(log => {
-                    let pointColor = '#888';
-                    let pointSign = '';
-                    if(log.points > 0) { pointColor = '#4CAF50'; pointSign = '+'; }
-                    if(log.points < 0) { pointColor = '#F44336'; pointSign = ''; }
+                    // LOGIKA VISUAL: Merah (Minus) / Hijau (Plus)
+                    let theme = 'neutral';
+                    let icon = '<i class="fas fa-circle" style="font-size:0.5rem"></i>';
+                    let sign = '';
+
+                    if(log.points > 0) { 
+                        theme = 'positive'; 
+                        icon = '<i class="fas fa-arrow-up"></i>';
+                        sign = '+';
+                    } else if(log.points < 0) { 
+                        theme = 'negative'; 
+                        icon = '<i class="fas fa-arrow-down"></i>';
+                        sign = ''; // Minus sudah ada di angkanya
+                    }
 
                     container.innerHTML += `
-                        <div style="background:white; padding:10px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-left:4px solid ${pointColor}; box-shadow:0 2px 5px rgba(0,0,0,0.03);">
-                            <div>
-                                <div style="font-weight:600; font-size:0.85rem; color:#444;">${log.activity || "Aktivitas"}</div>
-                                <div style="font-size:0.7rem; color:#999;">${log.date || ""}</div>
+                        <div class="history-item ${theme}">
+                            <div class="d-flex align-items-center">
+                                <div class="history-icon">${icon}</div>
+                                <div class="history-detail">
+                                    <div class="history-title">${log.activity || "Aktivitas"}</div>
+                                    <div class="history-date">${log.date || "-"}</div>
+                                </div>
                             </div>
-                            <div style="font-weight:bold; font-size:0.9rem; color:${pointColor};">
-                                ${log.points !== 0 ? pointSign + log.points + ' XP' : ''}
+                            <div class="history-points">
+                                ${log.points !== 0 ? sign + log.points + ' XP' : ''}
                             </div>
                         </div>
                     `;
