@@ -3,64 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sedang Membaca</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>Mode Baca & Riset</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        body { margin: 0; padding: 0; background-color: #FAF9F6; color: #2c2c2c; transition: background 0.3s, color 0.3s; }
-        .reader-header { position: sticky; top: 0; z-index: 100; background: rgba(250, 249, 246, 0.95); border-bottom: 1px solid #ddd; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; }
-        .book-info { font-family: 'Poppins', sans-serif; font-size: 0.85rem; font-weight: 600; max-width: 50%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .content-area { max-width: 700px; margin: 0 auto; padding: 30px 20px 50px 20px; font-family: 'Lora', serif; font-size: 18px; line-height: 1.8; text-align: justify; }
+        body { margin: 0; padding: 0; background-color: #FAF9F6; color: #2c2c2c; transition: 0.3s; }
+        .reader-header { 
+            position: sticky; top: 0; z-index: 100; background: rgba(250, 249, 246, 0.95); 
+            border-bottom: 1px solid #ddd; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; 
+        }
+        .content-area { max-width: 700px; margin: 0 auto; padding: 30px 20px 100px 20px; font-family: 'Lora', serif; font-size: 18px; line-height: 1.8; text-align: justify; }
         
-        body.dark-mode { background-color: #222; color: #ccc; }
-        body.dark-mode .reader-header { background: rgba(34,34,34,0.95); border-color: #444; }
-
-        /* Timer Ring */
-        .timer-container { position: relative; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        /* TIMER XP (Hanya muncul jika buku ada poinnya) */
+        .timer-container { position: relative; width: 40px; height: 40px; display: none; align-items: center; justify-content: center; }
         .xp-label { position: absolute; font-size: 0.6rem; font-weight: 900; font-family: 'Poppins', sans-serif; color: #FB8C00; }
         .progress-ring__circle { transition: stroke-dashoffset 1s linear; transform: rotate(-90deg); transform-origin: 50% 50%; }
 
-        /* Tombol Selesai */
-        .finish-section { margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; }
-        .btn-finish { background: #4CAF50; color: white; border: none; padding: 12px 30px; border-radius: 50px; font-weight: 600; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); width: 100%; max-width: 300px; }
+        .btn-finish { background: #4CAF50; color: white; border: none; padding: 12px 30px; border-radius: 50px; width: 100%; font-weight: 600; margin-top: 50px; }
     </style>
 </head>
 <body>
 
     <div class="reader-header">
-        <i class="fas fa-arrow-left" onclick="history.back()" style="font-size:1.2rem; cursor:pointer; color:#555;"></i>
-        <div class="book-info" id="rTitle">Memuat...</div>
+        <i class="fas fa-arrow-left" onclick="handleExit()" style="font-size:1.2rem; cursor:pointer; color:#555;"></i>
+        
+        <div style="font-family:'Poppins'; font-size:0.85rem; font-weight:600;" id="rTitle">Memuat...</div>
+        
         <div class="d-flex align-items-center gap-3">
-            <i class="fas fa-adjust" onclick="toggleTheme()" style="cursor:pointer; color:#555;"></i>
-            <div class="timer-container">
+            <div class="timer-container" id="xpTimer">
                 <svg width="36" height="36">
                     <circle stroke="#ddd" stroke-width="3" fill="transparent" r="16" cx="18" cy="18"/>
                     <circle id="progressRing" class="progress-ring__circle" stroke="#FB8C00" stroke-width="3" fill="transparent" r="16" cx="18" cy="18" stroke-dasharray="100.5" stroke-dashoffset="100.5"/>
                 </svg>
                 <div class="xp-label">XP</div>
             </div>
+            <i class="fas fa-database text-muted" style="font-size:0.8rem;" title="Data direkam untuk penelitian"></i>
         </div>
     </div>
 
     <div class="content-area">
-        <div id="rContent"><p style="text-align:center; color:#999; margin-top:50px;">Sedang mengambil halaman...</p></div>
-        
-        <div class="finish-section">
-            <p class="small text-muted mb-2">Sudah selesai membaca bab ini?</p>
-            <button class="btn-finish" onclick="finishReading()">
-                <i class="fas fa-check-circle me-2"></i> Selesai Baca
-            </button>
-        </div>
+        <div id="rContent">Mengambil data...</div>
+        <button class="btn-finish" onclick="finishReading()">Selesai Baca</button>
     </div>
 
-   <script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, get, update, increment, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIG SERVER SINGAPURA
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -76,24 +68,73 @@
         const auth = getAuth(app);
         
         let currentUser = null;
+        let userData = {};
+        
+        // VARIABEL PENELITIAN
+        let bookData = {};
+        let startTime = Date.now(); // Waktu mulai baca
+        let isXpEnabled = false; 
         let timerSeconds = 0;
         const XP_INTERVAL = 300; 
-        let bookTitle = "Buku";
 
-        // VISUAL TIMER
+        // Visual Timer setup
         const circle = document.getElementById('progressRing');
         const circumference = circle.r.baseVal.value * 2 * Math.PI;
         circle.style.strokeDasharray = `${circumference} ${circumference}`;
         circle.style.strokeDashoffset = circumference;
         function setProgress(percent) { circle.style.strokeDashoffset = circumference - (percent / 100) * circumference; }
 
-        setInterval(() => {
-            if(currentUser) {
+        onAuthStateChanged(auth, (user) => {
+            if(user) {
+                currentUser = user;
+                // Ambil data user untuk keperluan nama di laporan
+                get(ref(db, 'users/' + user.uid)).then(s => userData = s.val());
+                
+                loadBook();
+            } else window.location.href = "../index.html";
+        });
+
+        function loadBook() {
+            const params = new URLSearchParams(window.location.search);
+            const rawId = params.get('id');
+            let path = rawId.startsWith('WORK_') ? 'works/' + rawId.replace('WORK_','') : 'books/' + rawId;
+
+            get(ref(db, path)).then(snap => {
+                if(snap.exists()) {
+                    bookData = snap.val();
+                    bookData.id = rawId; // Simpan ID
+                    document.getElementById('rTitle').innerText = bookData.title;
+                    document.getElementById('rContent').innerHTML = bookData.content.replace(/\n/g, '<br><br>');
+
+                    // 1. CEK CONFIG PENELITIAN: Apakah buku ini ada XP-nya?
+                    // Default true jika tidak ada settingan (untuk buku lama)
+                    isXpEnabled = (bookData.isXpActive !== false); 
+
+                    if(isXpEnabled) {
+                        document.getElementById('xpTimer').style.display = 'flex';
+                        startXpTimer();
+                    } else {
+                        // Jika mode kontrol (tanpa XP), timer disembunyikan
+                        // TAPI tracker durasi tetap jalan di background
+                        console.log("Mode Penelitian: Grup Kontrol (Tanpa XP)");
+                    }
+
+                    // 2. CATAT LOG AWAL (User Masuk)
+                    logResearchData("MEMBUKA_BUKU", 0);
+                }
+            });
+        }
+
+        function startXpTimer() {
+            setInterval(() => {
                 timerSeconds++;
                 setProgress((timerSeconds / XP_INTERVAL) * 100);
-                if(timerSeconds >= XP_INTERVAL) { addXP(); timerSeconds = 0; }
-            }
-        }, 1000);
+                if(timerSeconds >= XP_INTERVAL) {
+                    addXP();
+                    timerSeconds = 0;
+                }
+            }, 1000);
+        }
 
         function addXP() {
             update(ref(db, 'users/' + currentUser.uid), { xp: increment(2) });
@@ -103,60 +144,51 @@
             setTimeout(() => { label.style.color = "#FB8C00"; label.innerText = "XP"; }, 2000);
         }
 
-        onAuthStateChanged(auth, (user) => {
-            if(user) {
-                currentUser = user;
-                const urlParams = new URLSearchParams(window.location.search);
-                const rawId = urlParams.get('id');
-                
-                if(rawId) {
-                    // --- LOGIKA CERDAS DETEKSI ID ---
-                    let dbPath = '';
-                    
-                    if(rawId.startsWith('WORK_')) {
-                        // Ini Karya Warga
-                        const realId = rawId.replace('WORK_', '');
-                        dbPath = 'works/' + realId;
-                    } else {
-                        // Ini Buku Admin
-                        dbPath = 'books/' + rawId;
-                    }
+        // --- SISTEM PELAPORAN DATA PENELITIAN ---
+        
+        // Fungsi Exit (Back Button)
+        window.handleExit = async () => {
+            // Hitung durasi baca dalam detik
+            const durationSec = Math.floor((Date.now() - startTime) / 1000);
+            
+            // Kirim data ke Database Riset
+            await logResearchData("KELUAR_HALAMAN", durationSec);
+            
+            history.back();
+        }
 
-                    // Ambil Data dari Jalur yang Benar
-                    get(ref(db, dbPath)).then(snap => {
-                        if(snap.exists()) {
-                            const d = snap.val();
-                            bookTitle = d.title;
-                            document.getElementById('rTitle').innerText = d.title;
-                            
-                            // Format paragraf
-                            const formatted = d.content.replace(/\n/g, '<br><br>');
-                            document.getElementById('rContent').innerHTML = formatted;
-                        } else {
-                            document.getElementById('rContent').innerHTML = '<p class="text-center text-danger mt-5">Konten tidak ditemukan atau telah dihapus.</p>';
-                        }
-                    });
-                }
-            } else window.location.href = "../index.html";
-        });
-
-        window.finishReading = () => {
-            Swal.fire({
-                title: 'Selesai Baca?', icon: 'question',
-                showCancelButton: true, confirmButtonText: 'Ya'
-            }).then((res) => {
+        // Fungsi Finish (Tombol Selesai)
+        window.finishReading = async () => {
+            const durationSec = Math.floor((Date.now() - startTime) / 1000);
+            
+            Swal.fire({title:'Selesai?', showCancelButton:true, confirmButtonText:'Ya'}).then(async (res) => {
                 if(res.isConfirmed) {
-                    update(ref(db, 'users/' + currentUser.uid), { booksRead: increment(1) });
-                    push(ref(db, `logs/${currentUser.uid}`), {
-                        activity: `Menamatkan: ${bookTitle}`,
-                        points: 0,
-                        date: new Date().toLocaleDateString('id-ID')
-                    });
-                    Swal.fire('Tercatat!', '', 'success').then(() => history.back());
+                    // Log Finish
+                    await logResearchData("SELESAI_BACA", durationSec);
+                    
+                    if(isXpEnabled) {
+                        update(ref(db, 'users/' + currentUser.uid), { booksRead: increment(1) });
+                    }
+                    
+                    Swal.fire('Tercatat!', 'Data bacaan telah disimpan.', 'success').then(() => history.back());
                 }
             });
         }
-        window.toggleTheme = () => document.body.classList.toggle('dark-mode');
+
+        async function logResearchData(actionType, duration) {
+            // Kita simpan di node khusus 'research_logs' agar mudah ditarik jadi PDF
+            await push(ref(db, 'research_logs'), {
+                uid: currentUser.uid,
+                userName: userData.fullName || currentUser.displayName,
+                bookTitle: bookData.title || "Unknown",
+                bookCategory: bookData.category || "Umum",
+                isXpBook: isXpEnabled, // Variabel Bebas (Ada Poin/Tidak)
+                action: actionType, // Variabel Terikat 1 (Aktivitas)
+                durationSeconds: duration, // Variabel Terikat 2 (Durasi)
+                timestamp: new Date().toLocaleString('id-ID'), // Waktu Real
+                rawTime: Date.now()
+            });
+        }
     </script>
 </body>
 </html>
