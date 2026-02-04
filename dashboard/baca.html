@@ -16,7 +16,10 @@
         }
         .content-area { max-width: 700px; margin: 0 auto; padding: 30px 20px 100px 20px; font-family: 'Lora', serif; font-size: 18px; line-height: 1.8; text-align: justify; }
         
-        /* TIMER XP (Hanya muncul jika buku ada poinnya) */
+        /* Konten Gambar di dalam cerita agar responsif */
+        .content-area img { max-width: 100%; height: auto; border-radius: 10px; margin: 10px 0; }
+
+        /* TIMER XP */
         .timer-container { position: relative; width: 40px; height: 40px; display: none; align-items: center; justify-content: center; }
         .xp-label { position: absolute; font-size: 0.6rem; font-weight: 900; font-family: 'Poppins', sans-serif; color: #FB8C00; }
         .progress-ring__circle { transition: stroke-dashoffset 1s linear; transform: rotate(-90deg); transform-origin: 50% 50%; }
@@ -29,7 +32,7 @@
     <div class="reader-header">
         <i class="fas fa-arrow-left" onclick="handleExit()" style="font-size:1.2rem; cursor:pointer; color:#555;"></i>
         
-        <div style="font-family:'Poppins'; font-size:0.85rem; font-weight:600;" id="rTitle">Memuat...</div>
+        <div style="font-family:'Poppins'; font-size:0.85rem; font-weight:600; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="rTitle">Memuat...</div>
         
         <div class="d-flex align-items-center gap-3">
             <div class="timer-container" id="xpTimer">
@@ -69,27 +72,34 @@
         
         let currentUser = null;
         let userData = {};
-        
-        // VARIABEL PENELITIAN
         let bookData = {};
-        let startTime = Date.now(); // Waktu mulai baca
+        let startTime = Date.now(); 
         let isXpEnabled = false; 
-        let timerSeconds = 0;
-        const XP_INTERVAL = 300; 
+        
+        // SETUP TIMER PERSISTENT (NYAMBUNG TERUS)
+        // Cek apakah ada sisa waktu tersimpan di browser?
+        let savedProgress = localStorage.getItem('xpProgress');
+        let timerSeconds = savedProgress ? parseInt(savedProgress) : 0;
+        
+        const XP_INTERVAL = 300; // 5 Menit (300 Detik)
 
         // Visual Timer setup
         const circle = document.getElementById('progressRing');
         const circumference = circle.r.baseVal.value * 2 * Math.PI;
         circle.style.strokeDasharray = `${circumference} ${circumference}`;
-        circle.style.strokeDashoffset = circumference;
-        function setProgress(percent) { circle.style.strokeDashoffset = circumference - (percent / 100) * circumference; }
+        
+        function setProgress(percent) { 
+            const offset = circumference - (percent / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        // Set tampilan awal lingkaran sesuai data simpanan
+        setProgress((timerSeconds / XP_INTERVAL) * 100);
 
         onAuthStateChanged(auth, (user) => {
             if(user) {
                 currentUser = user;
-                // Ambil data user untuk keperluan nama di laporan
                 get(ref(db, 'users/' + user.uid)).then(s => userData = s.val());
-                
                 loadBook();
             } else window.location.href = "../index.html";
         });
@@ -102,24 +112,25 @@
             get(ref(db, path)).then(snap => {
                 if(snap.exists()) {
                     bookData = snap.val();
-                    bookData.id = rawId; // Simpan ID
+                    bookData.id = rawId; 
                     document.getElementById('rTitle').innerText = bookData.title;
-                    document.getElementById('rContent').innerHTML = bookData.content.replace(/\n/g, '<br><br>');
+                    
+                    // REVISI KONTEN: Mendukung HTML (Bold, Italic, dll dari Admin)
+                    document.getElementById('rContent').innerHTML = bookData.content;
 
-                    // 1. CEK CONFIG PENELITIAN: Apakah buku ini ada XP-nya?
-                    // Default true jika tidak ada settingan (untuk buku lama)
+                    // CEK CONFIG PENELITIAN
                     isXpEnabled = (bookData.isXpActive !== false); 
 
                     if(isXpEnabled) {
+                        // Kalau buku ini ADA XP-nya -> Tampilkan Timer & Jalankan
                         document.getElementById('xpTimer').style.display = 'flex';
                         startXpTimer();
                     } else {
-                        // Jika mode kontrol (tanpa XP), timer disembunyikan
-                        // TAPI tracker durasi tetap jalan di background
-                        console.log("Mode Penelitian: Grup Kontrol (Tanpa XP)");
+                        // Kalau buku ini TANPA XP -> Sembunyikan Timer
+                        // DAN JANGAN JALANKAN TIMER (Agar simpanan detik aman)
+                        console.log("Mode Kontrol: Timer dipause.");
                     }
 
-                    // 2. CATAT LOG AWAL (User Masuk)
                     logResearchData("MEMBUKA_BUKU", 0);
                 }
             });
@@ -128,64 +139,66 @@
         function startXpTimer() {
             setInterval(() => {
                 timerSeconds++;
+                
+                // SIMPAN PROGRES SETIAP DETIK
+                localStorage.setItem('xpProgress', timerSeconds);
+                
+                // Update Lingkaran
                 setProgress((timerSeconds / XP_INTERVAL) * 100);
+                
+                // Jika sudah 5 menit (300 detik)
                 if(timerSeconds >= XP_INTERVAL) {
                     addXP();
                     timerSeconds = 0;
+                    localStorage.setItem('xpProgress', 0); // Reset simpanan
                 }
             }, 1000);
         }
 
         function addXP() {
             update(ref(db, 'users/' + currentUser.uid), { xp: increment(2) });
-            // Efek UI
+            // Log Transaksi (+2 Poin) agar muncul di Riwayat Dashboard
+            push(ref(db, `logs/${currentUser.uid}`), {
+                activity: "Bonus Membaca",
+                points: 2,
+                date: new Date().toLocaleDateString('id-ID'),
+                timestamp: Date.now()
+            });
+
             const label = document.querySelector('.xp-label');
             label.style.color = "#4CAF50"; label.innerText = "+2";
             setTimeout(() => { label.style.color = "#FB8C00"; label.innerText = "XP"; }, 2000);
         }
 
-        // --- SISTEM PELAPORAN DATA PENELITIAN ---
-        
-        // Fungsi Exit (Back Button)
         window.handleExit = async () => {
-            // Hitung durasi baca dalam detik
             const durationSec = Math.floor((Date.now() - startTime) / 1000);
-            
-            // Kirim data ke Database Riset
             await logResearchData("KELUAR_HALAMAN", durationSec);
-            
             history.back();
         }
 
-        // Fungsi Finish (Tombol Selesai)
         window.finishReading = async () => {
             const durationSec = Math.floor((Date.now() - startTime) / 1000);
-            
             Swal.fire({title:'Selesai?', showCancelButton:true, confirmButtonText:'Ya'}).then(async (res) => {
                 if(res.isConfirmed) {
-                    // Log Finish
                     await logResearchData("SELESAI_BACA", durationSec);
-                    
                     if(isXpEnabled) {
                         update(ref(db, 'users/' + currentUser.uid), { booksRead: increment(1) });
                     }
-                    
                     Swal.fire('Tercatat!', 'Data bacaan telah disimpan.', 'success').then(() => history.back());
                 }
             });
         }
 
         async function logResearchData(actionType, duration) {
-            // Kita simpan di node khusus 'research_logs' agar mudah ditarik jadi PDF
             await push(ref(db, 'research_logs'), {
                 uid: currentUser.uid,
                 userName: userData.fullName || currentUser.displayName,
                 bookTitle: bookData.title || "Unknown",
                 bookCategory: bookData.category || "Umum",
-                isXpBook: isXpEnabled, // Variabel Bebas (Ada Poin/Tidak)
-                action: actionType, // Variabel Terikat 1 (Aktivitas)
-                durationSeconds: duration, // Variabel Terikat 2 (Durasi)
-                timestamp: new Date().toLocaleString('id-ID'), // Waktu Real
+                isXpBook: isXpEnabled, 
+                action: actionType, 
+                durationSeconds: duration, 
+                timestamp: new Date().toLocaleString('id-ID'), 
                 rawTime: Date.now()
             });
         }
