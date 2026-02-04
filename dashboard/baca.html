@@ -3,21 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mode Baca & Riset</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>Mode Baca</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        body { margin: 0; padding: 0; background-color: #FAF9F6; color: #2c2c2c; transition: 0.3s; }
-        .reader-header { 
-            position: sticky; top: 0; z-index: 100; background: rgba(250, 249, 246, 0.95); 
-            border-bottom: 1px solid #ddd; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; 
+        /* VARIASI WARNA (TEMA) */
+        :root {
+            --bg-light: #FAF9F6;
+            --text-light: #2c2c2c;
+            --header-light: rgba(250, 249, 246, 0.98);
+            
+            --bg-dark: #121212;
+            --text-dark: #E0E0E0;
+            --header-dark: rgba(18, 18, 18, 0.98);
         }
-        .content-area { max-width: 700px; margin: 0 auto; padding: 30px 20px 100px 20px; font-family: 'Lora', serif; font-size: 18px; line-height: 1.8; text-align: justify; }
+
+        body { 
+            margin: 0; padding: 0; 
+            background-color: var(--bg-light); color: var(--text-light); 
+            transition: background-color 0.3s, color 0.3s; 
+        }
+
+        /* HEADER */
+        .reader-header { 
+            position: sticky; top: 0; z-index: 100; 
+            background: var(--header-light); 
+            border-bottom: 1px solid #ddd; padding: 10px 15px; 
+            display: flex; align-items: center; justify-content: space-between; 
+            transition: background 0.3s;
+        }
+
+        /* AREA BACA (DIPERBAIKI JARAK & FORMAT) */
+        .content-area { 
+            max-width: 700px; margin: 0 auto; 
+            padding: 30px 20px 100px 20px; 
+            font-family: 'Lora', serif; font-size: 18px; line-height: 1.8; 
+            text-align: justify; 
+        }
         
-        /* Konten Gambar di dalam cerita agar responsif */
-        .content-area img { max-width: 100%; height: auto; border-radius: 10px; margin: 10px 0; }
+        /* CSS KHUSUS RICH TEXT (Agar Bold/Italic Terbaca Jelas) */
+        .content-area p { margin-bottom: 1.5em; display: block; } 
+        .content-area b, .content-area strong { font-weight: 700; color: inherit; }
+        .content-area i, .content-area em { font-style: italic; }
+        .content-area u { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+        .content-area h1, .content-area h2, .content-area h3 { margin-top: 1.5em; margin-bottom: 0.5em; font-family: 'Poppins', sans-serif; font-weight: 700; }
+        .content-area ul, .content-area ol { margin-bottom: 1.5em; padding-left: 25px; }
+        .content-area li { margin-bottom: 5px; }
+        .content-area img { max-width: 100%; height: auto; border-radius: 10px; margin: 15px 0; display: block; }
+        .content-area blockquote { border-left: 4px solid #ccc; padding-left: 15px; font-style: italic; color: #666; margin: 1.5em 0; }
+
+        /* DARK MODE OVERRIDES */
+        body.dark-mode { background-color: var(--bg-dark); color: var(--text-dark); }
+        body.dark-mode .reader-header { background: var(--header-dark); border-bottom: 1px solid #333; }
+        body.dark-mode .fa-arrow-left, body.dark-mode .theme-icon { color: #E0E0E0 !important; }
+        body.dark-mode .content-area blockquote { border-left-color: #555; color: #aaa; }
 
         /* TIMER XP */
         .timer-container { position: relative; width: 40px; height: 40px; display: none; align-items: center; justify-content: center; }
@@ -25,6 +66,9 @@
         .progress-ring__circle { transition: stroke-dashoffset 1s linear; transform: rotate(-90deg); transform-origin: 50% 50%; }
 
         .btn-finish { background: #4CAF50; color: white; border: none; padding: 12px 30px; border-radius: 50px; width: 100%; font-weight: 600; margin-top: 50px; }
+        
+        /* TOMBOL TEMA */
+        .theme-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #555; transition: 0.2s; }
     </style>
 </head>
 <body>
@@ -32,9 +76,13 @@
     <div class="reader-header">
         <i class="fas fa-arrow-left" onclick="handleExit()" style="font-size:1.2rem; cursor:pointer; color:#555;"></i>
         
-        <div style="font-family:'Poppins'; font-size:0.85rem; font-weight:600; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="rTitle">Memuat...</div>
+        <div style="font-family:'Poppins'; font-size:0.85rem; font-weight:600; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="rTitle">Memuat...</div>
         
-        <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center gap-3" style="display:flex; gap:15px;">
+            <button class="theme-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon theme-icon" id="themeIcon"></i>
+            </button>
+
             <div class="timer-container" id="xpTimer">
                 <svg width="36" height="36">
                     <circle stroke="#ddd" stroke-width="3" fill="transparent" r="16" cx="18" cy="18"/>
@@ -42,7 +90,8 @@
                 </svg>
                 <div class="xp-label">XP</div>
             </div>
-            <i class="fas fa-database text-muted" style="font-size:0.8rem;" title="Data direkam untuk penelitian"></i>
+            
+            <i class="fas fa-database text-muted" style="font-size:0.8rem;" title="Data direkam"></i>
         </div>
     </div>
 
@@ -76,14 +125,31 @@
         let startTime = Date.now(); 
         let isXpEnabled = false; 
         
-        // SETUP TIMER PERSISTENT (NYAMBUNG TERUS)
-        // Cek apakah ada sisa waktu tersimpan di browser?
+        // --- LOGIKA MODE GELAP/TERANG ---
+        window.toggleTheme = () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            
+            // Ubah Ikon
+            const icon = document.getElementById('themeIcon');
+            icon.className = isDark ? 'fas fa-sun theme-icon' : 'fas fa-moon theme-icon';
+            
+            // Simpan Pilihan User
+            localStorage.setItem('readerTheme', isDark ? 'dark' : 'light');
+        }
+
+        // Cek Pilihan Sebelumnya
+        if(localStorage.getItem('readerTheme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeIcon').className = 'fas fa-sun theme-icon';
+        }
+        // ---------------------------------
+
+        // SETUP TIMER PERSISTENT (NYAMBUNG)
         let savedProgress = localStorage.getItem('xpProgress');
         let timerSeconds = savedProgress ? parseInt(savedProgress) : 0;
-        
-        const XP_INTERVAL = 300; // 5 Menit (300 Detik)
+        const XP_INTERVAL = 300; 
 
-        // Visual Timer setup
         const circle = document.getElementById('progressRing');
         const circumference = circle.r.baseVal.value * 2 * Math.PI;
         circle.style.strokeDasharray = `${circumference} ${circumference}`;
@@ -92,8 +158,6 @@
             const offset = circumference - (percent / 100) * circumference;
             circle.style.strokeDashoffset = offset;
         }
-
-        // Set tampilan awal lingkaran sesuai data simpanan
         setProgress((timerSeconds / XP_INTERVAL) * 100);
 
         onAuthStateChanged(auth, (user) => {
@@ -115,19 +179,15 @@
                     bookData.id = rawId; 
                     document.getElementById('rTitle').innerText = bookData.title;
                     
-                    // REVISI KONTEN: Mendukung HTML (Bold, Italic, dll dari Admin)
+                    // RENDER HTML (Dengan Bold, Italic, dll)
                     document.getElementById('rContent').innerHTML = bookData.content;
 
-                    // CEK CONFIG PENELITIAN
                     isXpEnabled = (bookData.isXpActive !== false); 
 
                     if(isXpEnabled) {
-                        // Kalau buku ini ADA XP-nya -> Tampilkan Timer & Jalankan
                         document.getElementById('xpTimer').style.display = 'flex';
                         startXpTimer();
                     } else {
-                        // Kalau buku ini TANPA XP -> Sembunyikan Timer
-                        // DAN JANGAN JALANKAN TIMER (Agar simpanan detik aman)
                         console.log("Mode Kontrol: Timer dipause.");
                     }
 
@@ -139,25 +199,18 @@
         function startXpTimer() {
             setInterval(() => {
                 timerSeconds++;
-                
-                // SIMPAN PROGRES SETIAP DETIK
                 localStorage.setItem('xpProgress', timerSeconds);
-                
-                // Update Lingkaran
                 setProgress((timerSeconds / XP_INTERVAL) * 100);
-                
-                // Jika sudah 5 menit (300 detik)
                 if(timerSeconds >= XP_INTERVAL) {
                     addXP();
                     timerSeconds = 0;
-                    localStorage.setItem('xpProgress', 0); // Reset simpanan
+                    localStorage.setItem('xpProgress', 0);
                 }
             }, 1000);
         }
 
         function addXP() {
             update(ref(db, 'users/' + currentUser.uid), { xp: increment(2) });
-            // Log Transaksi (+2 Poin) agar muncul di Riwayat Dashboard
             push(ref(db, `logs/${currentUser.uid}`), {
                 activity: "Bonus Membaca",
                 points: 2,
