@@ -27,10 +27,13 @@
         .reward-item {
             background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px;
             display: flex; align-items: center; gap: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative;
         }
         .reward-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; background: #eee; }
         
+        .badge-stok { font-size: 0.75rem; background: #E0F2F1; color: #00695C; padding: 3px 8px; border-radius: 10px; margin-left: 5px; }
+        .badge-habis { font-size: 0.75rem; background: #FFEBEE; color: #C62828; padding: 3px 8px; border-radius: 10px; margin-left: 5px; }
+
         .request-card {
             background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px;
             border-left: 5px solid #FFC107; 
@@ -42,6 +45,7 @@
 
         .btn-approve { background: #4CAF50; color: white; border: none; border-radius: 20px; padding: 5px 15px; font-size: 0.85rem; }
         .btn-reject { background: white; color: #F44336; border: 1px solid #F44336; border-radius: 20px; padding: 5px 15px; font-size: 0.85rem; }
+        .btn-mini { padding: 5px 10px; border-radius: 5px; border: none; font-size: 0.8rem; margin-left: 5px; cursor: pointer; }
 
         @keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
     </style>
@@ -67,8 +71,15 @@
             
             <div class="tab-pane fade show active" id="kelola" role="tabpanel">
                 <div class="card p-3 mb-4 shadow-sm border-0">
-                    <h6 class="text-primary fw-bold mb-3"><i class="fas fa-plus-circle"></i> Tambah Item Baru</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-primary fw-bold m-0" id="formTitle"><i class="fas fa-plus-circle"></i> Tambah Item Baru</h6>
+                        <button class="btn btn-sm btn-secondary d-none" id="btnCancelEdit" onclick="resetForm()">Batal Edit</button>
+                    </div>
+                    
                     <form id="addRewardForm">
+                        <input type="hidden" id="editRewardId">
+                        <input type="hidden" id="existingImgUrl">
+
                         <div class="row g-2">
                             <div class="col-8">
                                 <input type="text" id="itemName" class="form-control form-control-sm" placeholder="Nama Barang" required>
@@ -76,17 +87,21 @@
                             <div class="col-4">
                                 <input type="number" id="itemPoints" class="form-control form-control-sm" placeholder="Harga XP" required>
                             </div>
-                            <div class="col-12">
-                                <input type="file" id="itemImg" class="form-control form-control-sm" accept="image/*" required>
+                            <div class="col-4">
+                                <input type="number" id="itemStock" class="form-control form-control-sm" placeholder="Stok Awal" required>
                             </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">SIMPAN HADIAH</button>
+                            <div class="col-8">
+                                <input type="file" id="itemImg" class="form-control form-control-sm" accept="image/*">
+                                <small class="text-muted" style="font-size:0.7rem;">*Kosongkan jika tidak ganti gambar</small>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold" id="btnSubmit">SIMPAN HADIAH</button>
                             </div>
                         </div>
                     </form>
                 </div>
 
-                <h6 class="small text-muted ms-2">Daftar Hadiah Aktif</h6>
+                <h6 class="small text-muted ms-2">Daftar Hadiah Aktif (Urut Termurah)</h6>
                 <div id="rewardsList">
                     <div class="text-center p-4 text-muted">Memuat data...</div>
                 </div>
@@ -121,56 +136,117 @@
         const db = getDatabase(app);
         const IMGBB_API_KEY = "2f45fcafb6dfb2dbae295499022ce476";
 
-        // --- 1. TAMBAH HADIAH ---
+        // --- 1. SIMPAN HADIAH (ADD / UPDATE) ---
         document.getElementById('addRewardForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            const editId = document.getElementById('editRewardId').value;
             const file = document.getElementById('itemImg').files[0];
-            if(!file) return;
+            const isEdit = !!editId;
 
-            Swal.fire({title:'Mengupload...', didOpen:()=>Swal.showLoading()});
+            if(!isEdit && !file) { Swal.fire('Gagal', 'Wajib upload gambar untuk item baru!', 'warning'); return; }
 
-            const formData = new FormData(); formData.append('image', file);
+            Swal.fire({title: isEdit ? 'Mengupdate...' : 'Mengupload...', didOpen:()=>Swal.showLoading()});
+
             try {
-                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:'POST', body:formData });
-                const json = await res.json();
-                
-                if(json.success) {
-                    await push(ref(db, 'rewards'), {
-                        name: document.getElementById('itemName').value,
-                        cost: parseInt(document.getElementById('itemPoints').value),
-                        imageUrl: json.data.url,
-                        timestamp: Date.now()
-                    });
-                    Swal.fire('Sukses', 'Hadiah ditambahkan!', 'success');
-                    document.getElementById('addRewardForm').reset();
+                let imgUrl = document.getElementById('existingImgUrl').value;
+
+                if (file) {
+                    const formData = new FormData(); formData.append('image', file);
+                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:'POST', body:formData });
+                    const json = await res.json();
+                    if(json.success) imgUrl = json.data.url;
                 }
-            } catch(err) { Swal.fire('Error', 'Gagal upload', 'error'); }
+
+                const data = {
+                    name: document.getElementById('itemName').value,
+                    cost: parseInt(document.getElementById('itemPoints').value),
+                    stock: parseInt(document.getElementById('itemStock').value),
+                    imageUrl: imgUrl,
+                    timestamp: Date.now()
+                };
+
+                if(isEdit) {
+                    await update(ref(db, 'rewards/' + editId), data);
+                    Swal.fire('Sukses', 'Data diperbarui!', 'success');
+                } else {
+                    await push(ref(db, 'rewards'), data);
+                    Swal.fire('Sukses', 'Hadiah ditambahkan!', 'success');
+                }
+                resetForm();
+
+            } catch(err) { Swal.fire('Error', err.message, 'error'); }
         });
 
-        // --- 2. LIST HADIAH ---
+        // --- 2. LIST HADIAH (SORTING TERMURAH & STOK) ---
         onValue(ref(db, 'rewards'), (snap) => {
             const container = document.getElementById('rewardsList');
             container.innerHTML = '';
+            
             if(!snap.exists()) { container.innerHTML = '<div class="text-center p-4 text-muted">Kosong.</div>'; return; }
 
-            snap.forEach(c => {
-                const item = c.val();
+            let items = [];
+            snap.forEach(c => { items.push({ key:c.key, ...c.val() }); });
+
+            // Sort: Harga Termurah -> Termahal
+            items.sort((a,b) => a.cost - b.cost);
+
+            items.forEach(item => {
+                const stokBadge = item.stock > 0 
+                    ? `<span class="badge-stok">Sisa: ${item.stock}</span>` 
+                    : `<span class="badge-habis">HABIS</span>`;
+
+                // Data Safe untuk tombol edit
+                const safeName = encodeURIComponent(item.name);
+                const safeImg = encodeURIComponent(item.imageUrl);
+
                 container.innerHTML += `
                     <div class="reward-item">
                         <img src="${item.imageUrl}" class="reward-thumb">
                         <div style="flex-grow:1;">
                             <div style="font-weight:700; font-size:0.95rem;">${item.name}</div>
-                            <div style="color:#D81B60; font-weight:600; font-size:0.85rem;">${item.cost} XP</div>
+                            <div style="color:#D81B60; font-weight:600; font-size:0.85rem;">
+                                ${item.cost} XP ${stokBadge}
+                            </div>
                         </div>
-                        <button class="btn btn-sm btn-light text-danger" onclick="deleteReward('${c.key}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn-mini bg-light text-primary" onclick="editReward('${item.key}', '${safeName}', ${item.cost}, ${item.stock}, '${safeImg}')">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                        <button class="btn-mini bg-light text-danger" onclick="deleteReward('${item.key}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 `;
             });
         });
 
+        // --- 3. FUNGSI EDIT & DELETE ---
+        window.editReward = (key, name, cost, stock, img) => {
+            document.getElementById('editRewardId').value = key;
+            document.getElementById('itemName').value = decodeURIComponent(name);
+            document.getElementById('itemPoints').value = cost;
+            document.getElementById('itemStock').value = stock;
+            document.getElementById('existingImgUrl').value = decodeURIComponent(img);
+
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-pencil-alt"></i> Edit Hadiah';
+            document.getElementById('btnSubmit').innerText = "UPDATE HADIAH";
+            document.getElementById('btnSubmit').classList.replace('btn-primary', 'btn-success');
+            document.getElementById('btnCancelEdit').classList.remove('d-none');
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+
+        window.resetForm = () => {
+            document.getElementById('addRewardForm').reset();
+            document.getElementById('editRewardId').value = "";
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Tambah Item Baru';
+            document.getElementById('btnSubmit').innerText = "SIMPAN HADIAH";
+            document.getElementById('btnSubmit').classList.replace('btn-success', 'btn-primary');
+            document.getElementById('btnCancelEdit').classList.add('d-none');
+        }
+
         window.deleteReward = (key) => { if(confirm('Hapus?')) remove(ref(db, `rewards/${key}`)); }
 
-        // --- 3. LIST PERMINTAAN (MENAMPILKAN CATATAN) ---
+        // --- 4. LIST PERMINTAAN ---
         onValue(ref(db, 'redemptions'), (snap) => {
             const container = document.getElementById('requestList');
             container.innerHTML = '';
@@ -189,20 +265,17 @@
                                 <div class="req-date">${r.date}</div>
                             </div>
                             <div class="mb-2 mt-2">
-                                Ingin menukar: <span class="req-item">${r.rewardName}</span> 
+                                Menukar: <span class="req-item">${r.rewardName}</span> 
                                 <span class="badge bg-secondary">${r.cost} XP</span>
                             </div>
-                            
                             <div class="bg-light p-2 rounded border mb-3 small text-muted">
-                                <strong>Info Pengiriman:</strong><br>
-                                "${r.notes || 'Tidak ada catatan'}"
+                                <strong>Info:</strong> "${r.notes || '-'}"
                             </div>
-
                             <div class="d-flex gap-2">
-                                <button class="btn-approve flex-grow-1" onclick="processRequest('${c.key}', '${r.uid}', ${r.cost}, true)">
+                                <button class="btn-approve flex-grow-1" onclick="processRequest('${c.key}', '${r.uid}', ${r.cost}, '${r.rewardName}', true)">
                                     <i class="fas fa-check"></i> Proses
                                 </button>
-                                <button class="btn-reject" onclick="processRequest('${c.key}', '${r.uid}', 0, false)">
+                                <button class="btn-reject" onclick="processRequest('${c.key}', '${r.uid}', 0, '', false)">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -213,8 +286,8 @@
             if(count === 0) container.innerHTML = '<div class="text-center p-4 text-muted">Semua sudah diproses.</div>';
         });
 
-        // --- 4. PROSES REQUEST ---
-        window.processRequest = async (reqKey, userUid, cost, isApproved) => {
+        // --- 5. PROSES REQUEST (DENGAN PENGURANGAN STOK) ---
+        window.processRequest = async (reqKey, userUid, cost, rewardName, isApproved) => {
             if(!isApproved) {
                 Swal.fire({title:'Tolak?', showCancelButton:true, confirmButtonText:'Ya'}).then(async (res) => {
                     if(res.isConfirmed) {
@@ -227,21 +300,43 @@
 
             Swal.fire({title:'Memproses...', didOpen:()=>Swal.showLoading()});
             try {
+                // 1. Cek Poin User
                 const userSnap = await get(ref(db, `users/${userUid}`));
                 if((userSnap.val().xp || 0) < cost) { Swal.fire('Gagal', 'Poin user tidak cukup!', 'error'); return; }
 
+                // 2. Cek Stok Barang
+                // Kita harus cari ID barang berdasarkan namanya (agak manual karena struktur data kita sederhana)
+                const rewardsSnap = await get(ref(db, 'rewards'));
+                let rewardKey = null;
+                let currentStock = 0;
+
+                rewardsSnap.forEach(c => {
+                    if(c.val().name === rewardName) {
+                        rewardKey = c.key;
+                        currentStock = c.val().stock || 0;
+                    }
+                });
+
+                if(rewardKey && currentStock > 0) {
+                    // KURANGI STOK
+                    await update(ref(db, `rewards/${rewardKey}`), { stock: currentStock - 1 });
+                } else if (rewardKey && currentStock <= 0) {
+                    Swal.fire('Gagal', 'Stok barang sudah habis di database!', 'error');
+                    return; 
+                }
+
+                // 3. Eksekusi
                 await update(ref(db, `users/${userUid}`), { xp: increment(-cost) });
                 await update(ref(db, `redemptions/${reqKey}`), { status: 'approved' });
                 
-                // CATAT LOG KE RIWAYAT USER
                 await push(ref(db, `logs/${userUid}`), {
-                    activity: "Penukaran Hadiah Berhasil",
+                    activity: "Penukaran Berhasil",
                     points: -cost,
                     date: new Date().toLocaleDateString('id-ID'),
                     timestamp: Date.now()
                 });
 
-                Swal.fire('Berhasil', 'Poin dipotong & Disetujui.', 'success');
+                Swal.fire('Berhasil', 'Stok dikurangi & Poin dipotong.', 'success');
             } catch(e) { Swal.fire('Error', 'Gagal memproses.', 'error'); }
         };
         
