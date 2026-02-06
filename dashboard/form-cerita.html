@@ -12,7 +12,7 @@
 
     <style>
         :root { --primary-orange: #FB8C00; --light-bg: #FFF3E0; }
-        body { font-family: 'Poppins', sans-serif; background-color: var(--light-bg); padding-bottom: 30px; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--light-bg); padding-bottom: 80px; }
 
         /* HEADER ORANYE */
         .page-header {
@@ -41,8 +41,20 @@
             width: 100%; background: var(--primary-orange); color: white;
             font-weight: 600; padding: 12px; border-radius: 12px; border: none;
             margin-top: 10px; box-shadow: 0 4px 10px rgba(251, 140, 0, 0.3);
+            transition: transform 0.2s;
         }
         .btn-submit:active { transform: scale(0.98); }
+
+        /* LIST RIWAYAT */
+        .history-item {
+            background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-left: 5px solid #ccc;
+        }
+        .status-pending { border-left-color: #FFC107; } /* Kuning */
+        .status-published { border-left-color: #4CAF50; } /* Hijau */
+        .status-rejected { border-left-color: #F44336; } /* Merah */
+
+        .status-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: #eee; color: #555; }
     </style>
 </head>
 <body>
@@ -53,7 +65,7 @@
     </div>
 
     <div class="p-3 text-center text-muted" style="font-size: 0.85rem;">
-        Punya puisi atau cerpen? Kirim di sini! <br>Karya terbaik akan diterbitkan di aplikasi.
+        Kirim karyamu! AI Redaksi akan membantu merapikan tulisanmu sebelum terbit.
     </div>
 
     <div class="form-card">
@@ -74,19 +86,27 @@
 
             <div class="mb-3">
                 <label class="form-label" style="font-weight:600;">Isi Karya</label>
-                <textarea id="isiKarya" class="form-control" rows="10" placeholder="Tulis karyamu di sini..." required></textarea>
+                <textarea id="isiKarya" class="form-control" rows="10" placeholder="Tulis atau tempel karyamu di sini..." required></textarea>
+                <small class="text-muted" style="font-size:0.75rem;">*Pastikan tidak mengandung SARA/Pornografi.</small>
             </div>
 
             <button type="submit" class="btn-submit">
-                KIRIM KARYAKU <i class="fas fa-magic ms-2"></i>
+                KIRIM KE REDAKSI <i class="fas fa-paper-plane ms-2"></i>
             </button>
         </form>
+    </div>
+
+    <div class="container mt-4">
+        <h6 style="font-weight:700; color:#555; margin-left: 10px;">Riwayat Kiriman</h6>
+        <div id="myHistoryList" style="padding-bottom: 20px;">
+            <div class="text-center text-muted small py-3"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, push, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, set, get, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         // CONFIG FIREBASE (SINGAPURA)
         const firebaseConfig = {
@@ -106,17 +126,23 @@
         let currentUser = null;
         let userData = {};
 
-        // 1. Cek Login
+        // 1. Cek Login & Load History
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                get(ref(db, 'users/' + user.uid)).then(snap => { userData = snap.val(); });
+                // Ambil Nama User (Penting untuk Admin)
+                get(ref(db, 'users/' + user.uid)).then(snap => { 
+                    userData = snap.val() || {}; 
+                });
+                
+                // Load Riwayat Kiriman
+                loadMyWorks(user.uid);
             } else {
                 window.location.href = "../index.html";
             }
         });
 
-        // 2. Logic Submit
+        // 2. Logic Submit (Kirim Data)
         document.getElementById('karyaForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!currentUser) return;
@@ -125,21 +151,25 @@
             const kategori = document.getElementById('kategoriKarya').value;
             const isi = document.getElementById('isiKarya').value;
 
+            // Pastikan ada nama penulis (Fallback ke Email jika nama kosong)
+            const penulis = (userData && userData.fullName) ? userData.fullName : (currentUser.displayName || "Siswa Tanpa Nama");
+
             Swal.fire({title: 'Mengirim...', didOpen: () => Swal.showLoading()});
 
             try {
-                // A. Simpan Karya (Untuk Admin)
+                // A. Simpan Karya (Masuk ke Database 'works')
                 await push(ref(db, 'works'), {
                     uid: currentUser.uid,
-                    authorName: userData.fullName || currentUser.displayName,
+                    authorName: penulis, // <--- Ini yang dibaca Admin
                     title: judul,
                     category: kategori,
                     content: isi,
-                    status: 'pending',
+                    status: 'pending', // Status awal Pending
+                    aiEdited: false,
                     timestamp: Date.now()
                 });
 
-                // B. CATAT AKTIVITAS (Supaya Dashboard Muncul Log)
+                // B. Catat Log Aktivitas
                 await push(ref(db, `logs/${currentUser.uid}`), {
                     activity: "Mengirim Karya Tulis",
                     points: 0,
@@ -147,15 +177,69 @@
                 });
 
                 Swal.fire({
-                    icon: 'success', title: 'Hebat!',
-                    text: 'Karyamu sudah masuk dapur redaksi. Cek aktivitasmu!',
+                    icon: 'success', title: 'Terkirim!',
+                    text: 'Karyamu sedang menunggu kurasi Admin/AI.',
                     confirmButtonColor: '#FB8C00'
-                }).then(() => window.location.href = 'index.html'); // Balik Dashboard
+                });
+                
+                // Reset Form
+                document.getElementById('karyaForm').reset();
 
             } catch(err) {
+                console.error(err);
                 Swal.fire('Error', 'Gagal mengirim karya.', 'error');
             }
         });
+
+        // 3. Menampilkan Riwayat Status (Agar Siswa Tahu Nasib Karyanya)
+        function loadMyWorks(uid) {
+            const worksRef = query(ref(db, 'works'), orderByChild('uid').equalTo(uid));
+            
+            onValue(worksRef, (snap) => {
+                const container = document.getElementById('myHistoryList');
+                container.innerHTML = '';
+
+                if(!snap.exists()) {
+                    container.innerHTML = '<div class="text-center text-muted small py-3">Belum ada karya yang dikirim.</div>';
+                    return;
+                }
+
+                const myList = [];
+                snap.forEach(c => myList.push(c.val()));
+                myList.reverse(); // Terbaru di atas
+
+                myList.forEach(w => {
+                    let badgeColor = '';
+                    let statusText = '';
+                    let borderClass = '';
+
+                    if(w.status === 'pending') {
+                        statusText = '⏳ Menunggu Kurasi';
+                        badgeColor = '#FFC107'; // Kuning
+                        borderClass = 'status-pending';
+                    } else if (w.status === 'published') {
+                        statusText = '✅ Terbit (+100 XP)';
+                        badgeColor = '#4CAF50'; // Hijau
+                        borderClass = 'status-published';
+                    } else if (w.status === 'rejected') {
+                        statusText = '❌ Ditolak';
+                        badgeColor = '#F44336'; // Merah
+                        borderClass = 'status-rejected';
+                    }
+
+                    container.innerHTML += `
+                        <div class="history-item ${borderClass}">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span style="font-weight:700; color:#333;">${w.title}</span>
+                                <span style="font-size:0.7rem; color:#999;">${new Date(w.timestamp).toLocaleDateString()}</span>
+                            </div>
+                            <div style="font-size:0.8rem; color:#666; margin-bottom:5px;">${w.category}</div>
+                            <span class="status-badge" style="background:${badgeColor}; color:white;">${statusText}</span>
+                        </div>
+                    `;
+                });
+            });
+        }
     </script>
 </body>
 </html>
