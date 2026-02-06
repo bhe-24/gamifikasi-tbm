@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kurasi Karya AI</title>
+    <title>Kurasi Karya AI (Vercel)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -26,23 +26,17 @@
             transition: transform 0.2s;
         }
         
-        .status-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
-        .badge-pending { background: #FFF3E0; color: #EF6C00; }
-        .badge-published { background: #E8F5E9; color: #2E7D32; }
-        .badge-rejected { background: #FFEBEE; color: #C62828; }
-
         .btn-ai {
-            background: linear-gradient(45deg, #6200EA, #B388FF);
+            background: linear-gradient(45deg, #000000, #333333); /* Warna Vercel Hitam */
             color: white; border: none; width: 100%; padding: 10px;
             border-radius: 8px; font-weight: 700; margin-top: 10px;
             display: flex; align-items: center; justify-content: center; gap: 8px;
             transition: transform 0.2s;
         }
-        .btn-ai:hover { transform: scale(1.02); color: white; box-shadow: 0 4px 15px rgba(98, 0, 234, 0.3); }
+        .btn-ai:hover { transform: scale(1.02); color: white; box-shadow: 0 4px 15px rgba(0,0,0, 0.3); }
         
-        /* Animasi loading AI */
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .ai-processing { animation: pulse 1s infinite; pointer-events: none; background: #333; }
+        .ai-processing { animation: pulse 1s infinite; pointer-events: none; background: #555; }
     </style>
 </head>
 <body>
@@ -53,9 +47,9 @@
     </div>
 
     <div class="container mt-3">
-        <div class="alert alert-info small border-0 shadow-sm">
-            <i class="fas fa-robot me-2"></i> <strong>Sistem Kurasi AI Aktif</strong><br>
-            Klik tombol "Kurasi AI" untuk mengedit typo secara otomatis dan mempublish karya yang layak.
+        <div class="alert alert-dark small border-0 shadow-sm text-center">
+            <i class="fas fa-shield-alt me-2"></i> <strong>Secure AI Mode (Vercel)</strong><br>
+            Sistem kurasi aman. API Key terlindungi di server.
         </div>
         
         <div id="worksList">
@@ -81,8 +75,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // API KEY VENICE AI (MILIKMU)
-        const VENICE_KEY = "VENICE-ADMIN-KEY-l8LhjGpiddSgTDHKDUXnAZm1AS9x7Enf76Lb7rm4PZ";
+        // --- GANTI INI DENGAN LINK VERCEL KAMU NANTI ---
+        // Contoh: https://pkm-backend-saya.vercel.app/api/kurasi
+        const VERCEL_API_URL = "https://gamifikasi-tbm.vercel.app/api/kurasi";
 
         // 1. LOAD DATA KARYA
         onValue(ref(db, 'works'), (snap) => {
@@ -94,125 +89,107 @@
                 return;
             }
 
-            // Ubah ke array dan filter hanya yang PENDING
-            let works = [];
-            snap.forEach(c => works.push({ key: c.key, ...c.val() }));
-            
-            const pendingWorks = works.filter(w => w.status === 'pending');
-
-            if(pendingWorks.length === 0) {
-                container.innerHTML = '<div class="text-center p-5 text-muted">Semua karya sudah diproses.</div>';
-                return;
-            }
-
-            pendingWorks.forEach(w => {
-                // Encode konten agar aman dikirim ke fungsi
-                const safeContent = encodeURIComponent(w.content);
-                
-                container.innerHTML += `
-                    <div class="karya-card" id="card-${w.key}">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="fw-bold"><i class="fas fa-user"></i> ${w.authorName}</span>
-                            <span class="text-muted small">${new Date(w.timestamp).toLocaleDateString()}</span>
+            let pendingCount = 0;
+            snap.forEach(c => {
+                const w = c.val();
+                if(w.status === 'pending') {
+                    pendingCount++;
+                    // Encode agar karakter spesial aman
+                    const safeContent = encodeURIComponent(w.content);
+                    
+                    container.innerHTML += `
+                        <div class="karya-card">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="fw-bold"><i class="fas fa-user"></i> ${w.authorName || "Siswa"}</span>
+                                <span class="text-muted small">${new Date(w.timestamp).toLocaleDateString()}</span>
+                            </div>
+                            <h5 class="fw-bold text-dark">${w.title}</h5>
+                            <div class="badge bg-warning text-dark mb-2">${w.category}</div>
+                            
+                            <p class="text-muted small mb-3" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-style:italic;">
+                                "${w.content}"
+                            </p>
+                            
+                            <button class="btn-ai" onclick="processWithVercel('${c.key}', '${w.uid}', '${safeContent}')" id="btn-${c.key}">
+                                <i class="fas fa-magic"></i> Kurasi via Vercel AI
+                            </button>
+                            
+                            <div class="d-flex gap-2 mt-2">
+                                <button class="btn btn-sm btn-outline-danger w-50" onclick="manualAction('${c.key}', 'rejected')">Tolak</button>
+                                <button class="btn btn-sm btn-outline-success w-50" onclick="manualAction('${c.key}', 'published')">Terima</button>
+                            </div>
                         </div>
-                        <h5 class="fw-bold text-dark">${w.title}</h5>
-                        <p class="text-muted small mb-3" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                            "${w.content}"
-                        </p>
-                        
-                        <button class="btn-ai" onclick="processWithAI('${w.key}', '${w.uid}', '${safeContent}')" id="btn-${w.key}">
-                            <i class="fas fa-magic"></i> Kurasi & Edit Otomatis
-                        </button>
-                        
-                        <div class="d-flex gap-2 mt-2">
-                            <button class="btn btn-sm btn-outline-danger w-50" onclick="manualAction('${w.key}', 'rejected')">Tolak Manual</button>
-                            <button class="btn btn-sm btn-outline-success w-50" onclick="manualAction('${w.key}', 'published')">Terima Manual</button>
-                        </div>
-                    </div>
-                `;
+                    `;
+                }
             });
+
+            if(pendingCount === 0) container.innerHTML = '<div class="text-center p-5 text-muted">Semua karya sudah diproses.</div>';
         });
 
-        // 2. FUNGSI MAGIC: PROSES KE VENICE AI
-        window.processWithAI = async (workId, userId, encodedContent) => {
+        // 2. FUNGSI MAGIC: PROSES KE VERCEL (BACKEND)
+        window.processWithVercel = async (workId, userId, encodedContent) => {
             const btn = document.getElementById(`btn-${workId}`);
             const originalText = decodeURIComponent(encodedContent);
             
+            // Cek apakah user sudah mengganti link Vercel
+            if(VERCEL_API_URL.includes("LINK-VERCEL-KAMU")) {
+                Swal.fire('Setup Error', 'Link Vercel belum diganti di kodingan Admin!', 'warning');
+                return;
+            }
+
             // Ubah tombol jadi loading
             const originalBtnText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-cog fa-spin"></i> AI Sedang Bekerja...';
+            btn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> Menghubungi Server...';
             btn.classList.add('ai-processing');
 
             try {
-                // A. PANGGIL API VENICE
-                const response = await fetch("https://api.venice.ai/api/v1/chat/completions", {
+                // FETCH KE BACKEND VERCEL SENDIRI
+                const response = await fetch(VERCEL_API_URL, {
                     method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${VENICE_KEY}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        model: "venice-uncensored",
-                        messages: [
-                            {
-                                role: "system", 
-                                content: "Kamu adalah Editor Naskah Profesional untuk website sekolah. Tugasmu: 1. Perbaiki Typo (ejaan) dan Tanda Baca agar rapi sesuai PUEBI. 2. JANGAN ubah alur cerita. 3. Jika cerita mengandung PORNOGRAFI, LGBT, atau KEKERASAN EKSTREM, balas dengan satu kata: 'REJECTED'. 4. Jika aman, berikan hanya teks hasil perbaikan tanpa kata pengantar."
-                            },
-                            {
-                                role: "user", 
-                                content: originalText
-                            }
-                        ]
-                    })
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ naskah: originalText })
                 });
 
-                const data = await response.json();
-                
-                if(!data.choices || !data.choices[0]) throw new Error("AI Tidak Merespon");
-                
-                const aiResult = data.choices[0].message.content.trim();
+                if (!response.ok) throw new Error("Gagal menghubungi Vercel");
 
-                // B. CEK HASIL AI
+                const data = await response.json();
+                const aiResult = data.result.trim(); // Hasil teks dari Vercel
+
+                // LOGIKA SAMA SEPERTI SEBELUMNYA
                 if (aiResult.includes("REJECTED")) {
-                    // KASUS DITOLAK AI
                     await update(ref(db, `works/${workId}`), { status: 'rejected' });
-                    Swal.fire('Ditolak AI', 'Naskah mengandung konten sensitif (Pornografi/Kekerasan).', 'error');
+                    Swal.fire('Ditolak AI', 'Naskah mengandung konten sensitif.', 'error');
                 } else {
-                    // KASUS DITERIMA & DIPERBAIKI AI
-                    // 1. Update Naskah dengan versi AI
+                    // Update ke Firebase dengan hasil AI
                     await update(ref(db, `works/${workId}`), { 
-                        content: aiResult, // Naskah jadi rapi
+                        content: aiResult, 
                         status: 'published',
                         aiEdited: true
                     });
 
-                    // 2. Beri Hadiah Poin ke Siswa
+                    // Tambah Poin
                     await update(ref(db, `users/${userId}`), { xp: increment(100) });
 
-                    // 3. Catat Log
                     await push(ref(db, `logs/${userId}`), {
-                        activity: "Karya Diterbitkan (+100 XP)",
-                        points: 100,
-                        date: new Date().toLocaleDateString('id-ID'),
-                        timestamp: Date.now()
+                        activity: "Karya Diterbitkan (+100 XP)", points: 100,
+                        date: new Date().toLocaleDateString('id-ID'), timestamp: Date.now()
                     });
 
                     Swal.fire({
-                        title: 'Berhasil Terbit!',
-                        text: 'Naskah telah diperbaiki AI dan diterbitkan. Poin siswa bertambah.',
+                        title: 'Terbit!',
+                        text: 'Naskah sukses dikurasi Vercel & Poin dikirim.',
                         icon: 'success'
                     });
                 }
 
             } catch (err) {
                 console.error(err);
-                Swal.fire('Gagal', 'Terjadi kesalahan pada AI. Coba lagi atau manual.', 'error');
+                Swal.fire('Gagal', 'Terjadi kesalahan server: ' + err.message, 'error');
                 btn.innerHTML = originalBtnText;
                 btn.classList.remove('ai-processing');
             }
         };
 
-        // 3. MANUAL ACTION (BACKUP)
         window.manualAction = async (key, status) => {
             if(confirm('Yakin memproses manual?')) {
                 await update(ref(db, `works/${key}`), { status: status });
