@@ -36,15 +36,27 @@
         .reward-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
         .reward-card {
             background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            display: flex; flex-direction: column; transition: transform 0.2s;
+            display: flex; flex-direction: column; transition: transform 0.2s; position: relative;
         }
         .reward-card:active { transform: scale(0.98); }
+        
+        /* Gambar & Info */
         .reward-img { width: 100%; height: 120px; object-fit: cover; background: #eee; }
         .reward-info { padding: 10px; text-align: center; flex-grow: 1; }
         .reward-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; color: #444; height: 2.5em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;}
         .reward-price { display: inline-block; background: #FFF0F5; color: var(--primary-pink); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+        
+        /* Tombol Beli */
         .btn-redeem { width: 100%; background: var(--primary-pink); color: white; border: none; padding: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
         .btn-redeem:disabled { background: #ccc; cursor: not-allowed; }
+        
+        /* Badge Stok di User */
+        .stock-label { font-size: 0.7rem; margin-top: 5px; display: block; color: #666; }
+        .habis-overlay { 
+            position: absolute; top:0; left:0; width:100%; height:100%; 
+            background: rgba(255,255,255,0.7); z-index: 10; display: flex; 
+            align-items: center; justify-content: center; font-weight: 800; color: #D32F2F; font-size: 1.2rem; transform: rotate(-15deg);
+        }
     </style>
 </head>
 <body>
@@ -131,6 +143,7 @@
                         key: c.key,
                         name: r.name,
                         price: r.cost,
+                        stock: (r.stock !== undefined ? r.stock : 99), // Ambil stok, default 99
                         img: r.imageUrl
                     });
                 });
@@ -138,28 +151,53 @@
             });
         }
 
-        // 3. RENDER TAMPILAN
+        // 3. RENDER TAMPILAN (LOGIKA STOK + HARGA)
         function renderRewards() {
             const container = document.getElementById('rewardContainer');
             if(rewardsCatalog.length === 0) return; 
             
+            // SORTING: Termurah -> Termahal
+            rewardsCatalog.sort((a,b) => a.price - b.price);
+
             container.innerHTML = '';
 
             rewardsCatalog.forEach(item => {
-                const canBuy = currentXP >= item.price;
-                const btnClass = canBuy ? 'btn-redeem' : 'btn-redeem disabled';
-                const btnText = canBuy ? 'TUKAR SEKARANG' : 'POIN KURANG';
+                const isHabis = item.stock <= 0;
                 
+                // Logika Tombol & Overlay
+                let btnClass = 'btn-redeem';
+                let btnText = 'TUKAR SEKARANG';
+                let isDisabled = false;
+                let overlayHtml = '';
+
+                if (isHabis) {
+                    btnClass = 'btn-redeem disabled';
+                    btnText = 'HABIS';
+                    isDisabled = true;
+                    overlayHtml = '<div class="habis-overlay">HABIS</div>';
+                } else if (currentXP < item.price) {
+                    btnClass = 'btn-redeem disabled';
+                    btnText = 'POIN KURANG';
+                    isDisabled = true;
+                }
+                
+                // Label Stok
+                const stockText = isHabis ? 
+                    '<span class="text-danger fw-bold">Stok Habis</span>' : 
+                    `Sisa Stok: ${item.stock}`;
+
                 const card = `
-                    <div class="reward-card">
+                    <div class="reward-card" style="${isHabis ? 'opacity:0.7' : ''}">
+                        ${overlayHtml}
                         <img src="${item.img}" class="reward-img">
                         <div class="reward-info">
                             <div class="reward-name">${item.name}</div>
                             <div class="reward-price">${item.price} XP</div>
+                            <span class="stock-label">${stockText}</span>
                         </div>
                         <button class="${btnClass}" 
                             onclick="redeemItem('${item.name}', ${item.price})" 
-                            ${!canBuy ? 'disabled' : ''}>
+                            ${isDisabled ? 'disabled' : ''}>
                             ${btnText}
                         </button>
                     </div>
@@ -168,28 +206,27 @@
             });
         }
 
-        // 4. LOGIKA TUKAR (DENGAN CATATAN PENGIRIMAN)
+        // 4. LOGIKA TUKAR (DENGAN INPUT PENGIRIMAN)
         window.redeemItem = (itemName, price) => {
             Swal.fire({
                 title: 'Konfirmasi Penukaran',
                 html: `
-                    <p>Kamu akan menukar <b>${price} XP</b> untuk <b>${itemName}</b>.</p>
-                    <div class="text-start mt-3">
-                        <label class="small fw-bold text-muted">Info Pengiriman (Wajib Diisi):</label>
+                    <p>Tukar <b>${price} XP</b> untuk <b>${itemName}</b>?</p>
+                    <div class="text-start mt-3 bg-light p-2 rounded">
+                        <label class="small fw-bold text-dark">Info Pengiriman (Wajib):</label>
                         <p class="small mb-1 text-muted" style="font-size:0.75rem">
-                           - E-Wallet: Tulis No HP & Jenis (Dana/Gopay)<br>
-                           - Barang: Tulis Alamat Lengkap & No WA
+                           Contoh: "08123456 (Dana)" atau "Jl. Mawar No 5, Magelang"
                         </p>
                     </div>
                 `,
-                input: 'textarea', // Kotak isian
-                inputPlaceholder: 'Contoh: 08123456789 (Dana) a.n Budi',
+                input: 'textarea',
+                inputPlaceholder: 'Tulis info pengiriman di sini...',
                 showCancelButton: true,
                 confirmButtonColor: '#E91E63',
                 confirmButtonText: 'Kirim Permintaan',
                 cancelButtonText: 'Batal',
                 preConfirm: (info) => {
-                    if (!info) Swal.showValidationMessage('Info pengiriman tidak boleh kosong!')
+                    if (!info) Swal.showValidationMessage('Info pengiriman wajib diisi!')
                     return info
                 }
             }).then(async (result) => {
@@ -201,19 +238,19 @@
                         const userSnap = await get(ref(db, `users/${currentUser.uid}`));
                         const userName = userSnap.val().fullName || userSnap.val().username || "User";
 
-                        // Kirim Data + Catatan ke Admin
+                        // Kirim ke Admin (Status Pending)
                         await push(ref(db, 'redemptions'), {
                             uid: currentUser.uid,
                             userName: userName,
                             rewardName: itemName,
                             cost: price,
-                            notes: shippingInfo, // <--- Data Catatan Disimpan
+                            notes: shippingInfo, // <--- Data Alamat/HP
                             status: 'pending', 
                             date: new Date().toLocaleDateString('id-ID'),
                             timestamp: Date.now()
                         });
 
-                        Swal.fire('Berhasil!', 'Permintaan terkirim! Admin akan mengecek catatanmu.', 'success');
+                        Swal.fire('Berhasil!', 'Permintaan terkirim! Tunggu konfirmasi Admin.', 'success');
 
                     } catch(e) {
                         console.error(e);
