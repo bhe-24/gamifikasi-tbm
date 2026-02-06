@@ -106,9 +106,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, push, set, get, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIG FIREBASE (SINGAPURA)
+        // CONFIG FIREBASE (Pastikan sama persis dengan Admin)
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -130,12 +130,12 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                // Ambil Nama User (Penting untuk Admin)
+                // Ambil Nama User
                 get(ref(db, 'users/' + user.uid)).then(snap => { 
                     userData = snap.val() || {}; 
                 });
                 
-                // Load Riwayat Kiriman
+                // Load Riwayat (Versi Stabil)
                 loadMyWorks(user.uid);
             } else {
                 window.location.href = "../index.html";
@@ -150,63 +150,69 @@
             const judul = document.getElementById('judulKarya').value;
             const kategori = document.getElementById('kategoriKarya').value;
             const isi = document.getElementById('isiKarya').value;
-
-            // Pastikan ada nama penulis (Fallback ke Email jika nama kosong)
-            const penulis = (userData && userData.fullName) ? userData.fullName : (currentUser.displayName || "Siswa Tanpa Nama");
+            
+            // Nama Penulis: Prioritas Nama Lengkap > Display Name > "Siswa"
+            const penulis = userData.fullName || currentUser.displayName || "Siswa";
 
             Swal.fire({title: 'Mengirim...', didOpen: () => Swal.showLoading()});
 
             try {
-                // A. Simpan Karya (Masuk ke Database 'works')
+                // A. Simpan Karya ke folder 'works'
                 await push(ref(db, 'works'), {
                     uid: currentUser.uid,
-                    authorName: penulis, // <--- Ini yang dibaca Admin
+                    authorName: penulis,
                     title: judul,
                     category: kategori,
                     content: isi,
-                    status: 'pending', // Status awal Pending
+                    status: 'pending',
                     aiEdited: false,
                     timestamp: Date.now()
                 });
 
-                // B. Catat Log Aktivitas
-                await push(ref(db, `logs/${currentUser.uid}`), {
-                    activity: "Mengirim Karya Tulis",
-                    points: 0,
-                    date: new Date().toLocaleDateString('id-ID')
-                });
-
                 Swal.fire({
                     icon: 'success', title: 'Terkirim!',
-                    text: 'Karyamu sedang menunggu kurasi Admin/AI.',
+                    text: 'Karyamu berhasil dikirim ke Admin.',
                     confirmButtonColor: '#FB8C00'
                 });
                 
-                // Reset Form
                 document.getElementById('karyaForm').reset();
 
             } catch(err) {
                 console.error(err);
-                Swal.fire('Error', 'Gagal mengirim karya.', 'error');
+                Swal.fire('Error', 'Gagal kirim: ' + err.message, 'error');
             }
         });
 
-        // 3. Menampilkan Riwayat Status (Agar Siswa Tahu Nasib Karyanya)
+        // 3. Menampilkan Riwayat (Metode Filter Client-Side)
+        // Ini lebih aman dari error "Index not defined"
         function loadMyWorks(uid) {
-            const worksRef = query(ref(db, 'works'), orderByChild('uid').equalTo(uid));
+            const worksRef = ref(db, 'works');
             
             onValue(worksRef, (snap) => {
                 const container = document.getElementById('myHistoryList');
                 container.innerHTML = '';
 
                 if(!snap.exists()) {
-                    container.innerHTML = '<div class="text-center text-muted small py-3">Belum ada karya yang dikirim.</div>';
+                    container.innerHTML = '<div class="text-center text-muted small py-3">Belum ada karya.</div>';
                     return;
                 }
 
                 const myList = [];
-                snap.forEach(c => myList.push(c.val()));
-                myList.reverse(); // Terbaru di atas
+                // Loop semua karya, ambil CUMA punya user ini
+                snap.forEach(c => {
+                    const w = c.val();
+                    if(w.uid === uid) { // Filter manual di sini
+                        myList.push(w);
+                    }
+                });
+
+                if(myList.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted small py-3">Belum ada karya yang kamu kirim.</div>';
+                    return;
+                }
+
+                // Urutkan terbaru di atas
+                myList.sort((a, b) => b.timestamp - a.timestamp);
 
                 myList.forEach(w => {
                     let badgeColor = '';
@@ -215,15 +221,15 @@
 
                     if(w.status === 'pending') {
                         statusText = '⏳ Menunggu Kurasi';
-                        badgeColor = '#FFC107'; // Kuning
+                        badgeColor = '#FFC107'; 
                         borderClass = 'status-pending';
                     } else if (w.status === 'published') {
-                        statusText = '✅ Terbit (+100 XP)';
-                        badgeColor = '#4CAF50'; // Hijau
+                        statusText = '✅ Terbit';
+                        badgeColor = '#4CAF50';
                         borderClass = 'status-published';
                     } else if (w.status === 'rejected') {
                         statusText = '❌ Ditolak';
-                        badgeColor = '#F44336'; // Merah
+                        badgeColor = '#F44336';
                         borderClass = 'status-rejected';
                     }
 
