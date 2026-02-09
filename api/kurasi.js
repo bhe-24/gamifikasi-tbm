@@ -1,59 +1,74 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 export default async function handler(req, res) {
-    // 1. SETUP CORS (Agar HTML Admin kamu bisa akses Vercel ini)
+    // SETUP CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Boleh diakses dari mana saja (HTML kamu)
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-    // Tangani request "OPTIONS" (Pre-flight check browser)
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
-    }
-
-    // Pastikan method POST
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
+    if (req.method === 'OPTIONS') { res.status(200).end(); return; }
+    if (req.method !== 'POST') { return res.status(405).json({ error: 'Method Not Allowed' }); }
 
     try {
-        const { naskah } = req.body;
-
-        if (!process.env.GEMINI_API_KEY) {
-            throw new Error("API Key belum disetting di Vercel!");
+        let bodyData = req.body;
+        if (typeof req.body === 'string') {
+            try { bodyData = JSON.parse(req.body); } catch (e) { return res.status(400).json({ error: "JSON Error" }); }
         }
 
-        // 2. KONFIGURASI GEMINI
+        const { text, type } = bodyData; // 'type' bisa 'edit_karya' atau 'nilai_laporan'
+
+        if (!process.env.GEMINI_API_KEY) { return res.status(500).json({ error: "API Key Missing" }); }
+
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        // 3. PROMPT EDITOR
-        const prompt = `
-            Kamu adalah Editor Sekolah Profesional. Tugasmu:
-            1. Baca naskah cerita siswa di bawah ini.
-            2. SENSOR & TOLAK: Jika mengandung Pornografi, LGBT, Kebencian, atau Kekerasan Sadis, balas HANYA dengan kata "REJECTED".
-            3. PERBAIKI: Jika aman, perbaiki Ejaan (Typo), Tanda Baca, dan Huruf Kapital agar rapi dan enak dibaca sesuai PUEBI. Jangan mengubah jalan cerita.
-            4. OUTPUT: Berikan langsung naskah hasil perbaikan tanpa kata pengantar atau komentar.
-            
-            Naskah Asli:
-            "${naskah}"
-        `;
+        let prompt = "";
 
-        // 4. KIRIM KE GOOGLE
+        if (type === 'nilai_laporan') {
+            // PROMPT KHUSUS PENILAIAN LAPORAN
+            prompt = `
+                Kamu adalah Guru Bahasa Indonesia. Tugasmu menilai rangkuman buku siswa.
+                
+                Kriteria Penilaian:
+                1. Panjang & Detail (Semakin lengkap semakin bagus).
+                2. Pemahaman Isi (Tidak melenceng).
+                3. Orisinalitas (Bukan copy-paste mentah).
+
+                Berikan output HANYA dalam format JSON seperti ini (Tanpa teks lain):
+                {
+                    "score": (Angka 10-100),
+                    "feedback": "Komentar singkat 1 kalimat untuk siswa",
+                    "status": "approved" (atau "rejected" jika isinya asal-asalan/spam)
+                }
+
+                Rangkuman Siswa:
+                "${text}"
+            `;
+        } else {
+            // PROMPT DEFAULT (EDIT NASKAH)
+            prompt = `
+                Kamu Editor Sekolah.
+                1. Jika mengandung Pornografi/SARA/Kekerasan: Balas "REJECTED".
+                2. Jika aman: Perbaiki Typo & PUEBI.
+                3. Output: Langsung hasil teks perbaikan.
+                
+                Naskah: "${text}"
+            `;
+        }
+
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        const text = response.text();
+        let outputText = response.text().trim();
 
-        // 5. BALAS KE FRONTEND
-        return res.status(200).json({ result: text });
+        // Bersihkan format JSON jika AI menambahkan backtick
+        if (type === 'nilai_laporan') {
+            outputText = outputText.replace(/```json/g, '').replace(/```/g, '').trim();
+        }
+
+        return res.status(200).json({ result: outputText });
 
     } catch (error) {
-        console.error("Error Vercel:", error);
         return res.status(500).json({ error: error.message });
     }
 }
