@@ -27,7 +27,7 @@
         .header-logo-small {
             width: 35px; height: 35px; 
             background: white; border-radius: 50%; padding: 2px;
-            object-fit: contain; /* Agar logo tidak gepeng */
+            object-fit: contain; 
         }
 
         /* BANNER */
@@ -103,18 +103,12 @@
         let rawWorks = []; 
         let combinedData = [];
 
-        // 1. LOAD SETTINGS (Banner & Logo) - PERBAIKAN DI SINI
+        // 1. LOAD SETTINGS
         onValue(ref(db, 'settings'), snap => {
             const val = snap.val();
             if(val) {
-                // Update Banner
-                if(val.bannerBacaUrl) {
-                    document.getElementById('bannerImg').src = val.bannerBacaUrl;
-                }
-                // Update Logo (Ini yang tadi kurang)
-                if(val.logoUrl) {
-                    document.getElementById('headerLogo').src = val.logoUrl;
-                }
+                if(val.bannerBacaUrl) document.getElementById('bannerImg').src = val.bannerBacaUrl;
+                if(val.logoUrl) document.getElementById('headerLogo').src = val.logoUrl;
             }
         });
 
@@ -123,7 +117,13 @@
             rawBooks = [];
             if(snap.exists()) {
                 snap.forEach(c => {
-                    rawBooks.push({ ...c.val(), type: 'book', id: c.key });
+                    // Ambil timestamp juga agar bisa disortir
+                    rawBooks.push({ 
+                        ...c.val(), 
+                        type: 'book', 
+                        id: c.key,
+                        timestamp: c.val().timestamp || 0 // Default 0 jika data lama belum ada tanggal
+                    });
                 });
             }
             mergeAndRender();
@@ -143,7 +143,8 @@
                             author: val.authorName, 
                             category: "Karya Warga", 
                             coverUrl: "https://placehold.co/130x190/FB8C00/ffffff?text=Karya", 
-                            content: val.content
+                            content: val.content,
+                            timestamp: val.timestamp || 0 // Ambil Timestamp dari karya
                         });
                     }
                 });
@@ -152,7 +153,12 @@
         });
 
         function mergeAndRender() {
+            // Gabungkan data
             combinedData = [...rawBooks, ...rawWorks];
+
+            // LOGIKA SORTING BARU: URUTKAN BERDASARKAN TIMESTAMP (TERBARU DI ATAS/KIRI)
+            combinedData.sort((a, b) => b.timestamp - a.timestamp);
+
             renderContent(combinedData);
         }
 
@@ -166,12 +172,14 @@
             }
 
             const categories = {};
+            // Grouping tapi urutan array di dalamnya tetap terjaga (karena sudah disortir sebelumnya)
             items.forEach(item => {
                 const catName = item.category || "Umum";
                 if (!categories[catName]) categories[catName] = [];
                 categories[catName].push(item);
             });
 
+            // Render per Kategori
             Object.keys(categories).forEach(cat => {
                 const itemsInCat = categories[cat];
                 let itemsHtml = '';
