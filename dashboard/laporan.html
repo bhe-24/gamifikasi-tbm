@@ -12,7 +12,7 @@
 
     <style>
         :root { --primary-blue: #1565C0; --light-bg: #E3F2FD; }
-        body { font-family: 'Poppins', sans-serif; background-color: var(--light-bg); padding-bottom: 30px; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--light-bg); padding-bottom: 80px; }
 
         /* HEADER */
         .page-header {
@@ -25,21 +25,19 @@
         .btn-back { color: white; font-size: 1.2rem; background: none; border: none; cursor: pointer;}
         .page-title { flex-grow: 1; text-align: center; font-weight: 700; font-size: 1.1rem; margin-right: 20px; }
 
-        /* KUOTA BADGE */
-        .quota-container {
-            text-align: center; margin-top: -15px; position: relative; z-index: 101;
-        }
-        .quota-badge {
-            background: white; color: #1565C0; padding: 5px 15px; border-radius: 20px;
-            font-size: 0.8rem; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: inline-block;
-        }
-
         /* FORM CARD */
         .form-card {
             background: white; margin: 20px; padding: 25px; border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative;
         }
+        
+        /* KUOTA DI DALAM FORM */
+        .quota-badge {
+            background: #E3F2FD; color: #1565C0; padding: 8px 15px; border-radius: 12px;
+            font-size: 0.85rem; font-weight: 700; display: block; text-align: center;
+            margin-bottom: 20px; border: 1px dashed #1565C0;
+        }
+
         .form-label { font-weight: 600; font-size: 0.9rem; color: #555; }
         .form-control {
             border-radius: 10px; padding: 12px; border: 1px solid #ddd;
@@ -58,11 +56,28 @@
 
         .info-box {
             background-color: #FFF3E0; border-left: 4px solid #FFB74D;
-            padding: 15px; margin: 20px; border-radius: 8px;
+            padding: 15px; margin: 0 20px 20px 20px; border-radius: 8px;
             font-size: 0.85rem; color: #E65100;
         }
         
         .validation-error { color: #D32F2F; font-size: 0.75rem; margin-top: 5px; display: none; }
+
+        /* RIWAYAT AREA */
+        .history-title { margin: 0 25px 15px 25px; font-weight: 700; color: #333; font-size: 1rem; }
+        .history-list { padding: 0 20px; }
+        .history-card {
+            background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-left: 5px solid #ddd;
+        }
+        .status-pending { border-left-color: #FFC107; }
+        .status-approved { border-left-color: #4CAF50; }
+        .status-rejected { border-left-color: #F44336; }
+
+        .feedback-box {
+            background: #F1F8E9; border-radius: 8px; padding: 10px; margin-top: 10px;
+            font-size: 0.8rem; color: #33691E; border: 1px solid #C5E1A5;
+        }
+        .feedback-title { font-weight: 700; display: block; margin-bottom: 3px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
@@ -72,18 +87,16 @@
         <div class="page-title">Lapor Bacaan</div>
     </div>
 
-    <div class="quota-container">
-        <div class="quota-badge" id="quotaBadge">
-            <i class="fas fa-ticket-alt me-1"></i> Sisa Kuota Hari Ini: <span id="quotaCount">...</span>
-        </div>
-    </div>
-
-    <div class="info-box">
+    <div class="info-box mt-4">
         <i class="fas fa-info-circle me-2"></i>
         Isi ringkasan dengan detail (Min. 3 Kalimat & 2 Paragraf) untuk mendapatkan <strong>+50 XP</strong>.
     </div>
 
     <div class="form-card">
+        <div class="quota-badge" id="quotaBadge">
+            <i class="fas fa-ticket-alt me-1"></i> Kuota Hari Ini: <span id="quotaCount">...</span>
+        </div>
+
         <form id="laporForm">
             <div class="mb-3">
                 <label class="form-label">Judul Buku</label>
@@ -108,12 +121,16 @@
         </form>
     </div>
 
+    <div class="history-title"><i class="fas fa-history me-2"></i>Riwayat Laporan</div>
+    <div class="history-list" id="historyContainer">
+        <div class="text-center text-muted small py-3"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, push, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIG FIREBASE (SINGAPURA)
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -133,18 +150,18 @@
         let dailyCount = 0;
         const MAX_DAILY = 5;
 
-        // Set Tanggal Hari Ini (Format YYYY-MM-DD)
+        // Set Tanggal Hari Ini
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('tglBaca').value = today;
 
-        // 1. Cek Login & Load Kuota
+        // 1. Cek Login
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 get(ref(db, 'users/' + user.uid)).then(snap => { userData = snap.val(); });
                 
-                // Cek Kuota Harian
                 checkDailyQuota(user.uid);
+                loadHistory(user.uid); // Load Riwayat
             } else {
                 window.location.href = "../index.html";
             }
@@ -152,82 +169,132 @@
 
         // 2. FUNGSI CEK KUOTA
         function checkDailyQuota(uid) {
-            const reportsRef = ref(db, 'reports');
-            onValue(reportsRef, (snap) => {
+            onValue(ref(db, 'reports'), (snap) => {
                 let count = 0;
                 if(snap.exists()) {
                     snap.forEach(c => {
                         const r = c.val();
-                        // Hitung laporan milik user ini PADA HARI INI
-                        if(r.uid === uid && r.date === today) {
-                            count++;
-                        }
+                        if(r.uid === uid && r.date === today) count++;
                     });
                 }
                 dailyCount = count;
                 const sisa = MAX_DAILY - dailyCount;
                 
-                // Update UI Badge
                 document.getElementById('quotaCount').innerText = `${sisa} / ${MAX_DAILY}`;
                 
-                // Matikan Tombol Jika Habis
                 const btn = document.getElementById('btnKirim');
                 if(sisa <= 0) {
                     btn.disabled = true;
                     btn.innerText = "KUOTA HARIAN HABIS";
                     btn.style.backgroundColor = "#B0BEC5";
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Istirahat Dulu!',
-                        text: 'Kamu sudah mengirim 5 laporan hari ini. Kembali lagi besok ya!',
-                        confirmButtonColor: '#1565C0'
-                    });
                 } else {
                     btn.disabled = false;
                 }
             });
         }
 
-        // 3. LOGIC SUBMIT
+        // 3. FUNGSI LOAD RIWAYAT (BARU)
+        function loadHistory(uid) {
+            onValue(ref(db, 'reports'), (snap) => {
+                const container = document.getElementById('historyContainer');
+                container.innerHTML = '';
+
+                if(!snap.exists()) {
+                    container.innerHTML = '<div class="text-center text-muted small">Belum ada laporan.</div>';
+                    return;
+                }
+
+                let myList = [];
+                snap.forEach(c => {
+                    const r = c.val();
+                    if(r.uid === uid) myList.push(r);
+                });
+
+                if(myList.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted small">Belum ada laporan.</div>';
+                    return;
+                }
+
+                // Urutkan Terbaru
+                myList.sort((a,b) => b.timestamp - a.timestamp);
+
+                myList.forEach(r => {
+                    let statusLabel = '';
+                    let borderClass = '';
+                    let feedbackHtml = '';
+
+                    if(r.status === 'pending') {
+                        statusLabel = '<span class="badge bg-warning text-dark">Sedang Diverifikasi</span>';
+                        borderClass = 'status-pending';
+                    } else if(r.status === 'approved') {
+                        statusLabel = '<span class="badge bg-success">Diterima (+50 XP)</span>';
+                        borderClass = 'status-approved';
+                        // Tampilkan Catatan Jika Ada (Entah dari AI atau Admin)
+                        if(r.aiFeedback || r.adminNote) {
+                            feedbackHtml = `
+                                <div class="feedback-box">
+                                    <span class="feedback-title"><i class="fas fa-check-circle me-1"></i> CATATAN REDAKSI:</span>
+                                    "${r.aiFeedback || r.adminNote}"
+                                </div>
+                            `;
+                        }
+                    } else if(r.status === 'rejected') {
+                        statusLabel = '<span class="badge bg-danger">Ditolak</span>';
+                        borderClass = 'status-rejected';
+                        if(r.adminNote) {
+                            feedbackHtml = `
+                                <div class="feedback-box" style="background:#FFEBEE; color:#C62828; border-color:#FFCDD2;">
+                                    <span class="feedback-title"><i class="fas fa-exclamation-circle me-1"></i> ALASAN PENOLAKAN:</span>
+                                    "${r.adminNote}"
+                                </div>
+                            `;
+                        }
+                    }
+
+                    container.innerHTML += `
+                        <div class="history-card ${borderClass}">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div style="font-weight:700; font-size:0.95rem;">${r.bookTitle}</div>
+                                <div style="font-size:0.75rem; color:#888;">${r.date}</div>
+                            </div>
+                            <div class="mb-2">${statusLabel}</div>
+                            <div style="font-size:0.85rem; color:#666; font-style:italic;">
+                                "${r.summary.substring(0, 60)}..."
+                            </div>
+                            ${feedbackHtml}
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        // 4. LOGIC SUBMIT
         document.getElementById('laporForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!currentUser) return;
-            if(dailyCount >= MAX_DAILY) return; // Double check
+            if(dailyCount >= MAX_DAILY) return;
 
             const judul = document.getElementById('judulBuku').value;
             const ringkasan = document.getElementById('ringkasan').value;
 
-            // --- VALIDASI KONTEN (MIN 3 KALIMAT & 2 PARAGRAF) ---
-            // Hitung Paragraf (Split by Enter)
+            // VALIDASI
             const paragraphs = ringkasan.trim().split(/\n+/).length;
-            
-            // Hitung Kalimat (Split by titik/tanda tanya/seru)
-            // Filter biar yg kosong gak dihitung
             const sentences = ringkasan.split(/[.!?]+/).filter(s => s.trim().length > 3).length;
 
             if (paragraphs < 2 || sentences < 3) {
                 document.getElementById('textFeedback').style.display = 'block';
                 document.getElementById('textFeedback').innerHTML = `
-                    <i class="fas fa-exclamation-triangle"></i> Tulisanmu masih kurang detail!<br>
-                    <b>Status saat ini:</b> ${paragraphs} Paragraf, ${sentences} Kalimat.<br>
-                    (Minimal butuh 2 Paragraf dan 3 Kalimat).
+                    <i class="fas fa-exclamation-triangle"></i> Kurang detail! (Min. 2 Paragraf & 3 Kalimat).<br>
+                    Saat ini: ${paragraphs} Paragraf, ${sentences} Kalimat.
                 `;
-                Swal.fire({
-                    icon: 'warning', 
-                    title: 'Belum Lengkap', 
-                    text: 'Mohon tulis ringkasan minimal 2 paragraf dan 3 kalimat agar bisa dikirim.',
-                    confirmButtonColor: '#1565C0'
-                });
                 return;
             } else {
                 document.getElementById('textFeedback').style.display = 'none';
             }
-            // ----------------------------------------------------
 
-            Swal.fire({title: 'Memproses Laporan...', didOpen: () => Swal.showLoading()});
+            Swal.fire({title: 'Mengirim...', didOpen: () => Swal.showLoading()});
 
             try {
-                // A. Kirim Data
                 await push(ref(db, 'reports'), {
                     uid: currentUser.uid,
                     userName: userData.fullName || currentUser.displayName,
@@ -238,36 +305,29 @@
                     timestamp: Date.now()
                 });
 
-                // B. Catat Log
                 await push(ref(db, `logs/${currentUser.uid}`), {
-                    activity: "Mengirim Laporan Baca",
-                    points: 0,
-                    date: new Date().toLocaleDateString('id-ID')
+                    activity: "Mengirim Laporan Baca", points: 0, date: new Date().toLocaleDateString('id-ID')
                 });
 
-                // C. POP UP SUKSES & INFO KUOTA
-                const sisaBaru = (MAX_DAILY - dailyCount) - 1; // Prediksi sisa
+                const sisaBaru = (MAX_DAILY - dailyCount) - 1;
                 
                 Swal.fire({
-                    icon: 'success', 
-                    title: 'Laporan Diterima!',
+                    icon: 'success', title: 'Laporan Diterima!',
                     html: `
                         <p class="text-muted">Terima kasih sudah membaca hari ini.</p>
-                        <hr>
-                        <div class="text-start ms-4">
+                        <div class="text-start ms-4" style="background:#f9f9f9; padding:10px; border-radius:10px;">
                             <p class="mb-1">✅ <strong>Status:</strong> Menunggu Verifikasi</p>
-                            <p class="mb-1">🎫 <strong>Sisa Kuota Hari Ini:</strong> ${sisaBaru}</p>
-                            <p class="mb-0">⭐ <strong>Poin:</strong> +50 XP (Setelah disetujui)</p>
+                            <p class="mb-1">🎫 <strong>Sisa Kuota:</strong> ${sisaBaru}</p>
+                            <p class="mb-0">⭐ <strong>Poin:</strong> +50 XP (Jika disetujui)</p>
                         </div>
                     `,
-                    confirmButtonText: 'Oke, Paham',
-                    confirmButtonColor: '#1565C0'
+                    confirmButtonText: 'Oke', confirmButtonColor: '#1565C0'
                 }).then(() => {
-                    window.location.href = 'index.html'; 
+                    document.getElementById('laporForm').reset();
+                    document.getElementById('tglBaca').value = today;
                 });
 
             } catch (err) {
-                console.error(err);
                 Swal.fire('Gagal', 'Terjadi kesalahan jaringan.', 'error');
             }
         });
