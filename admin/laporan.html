@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Verifikasi Laporan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi Laporan AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -11,11 +11,20 @@
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #E8F5E9; padding-bottom: 50px; }
         .admin-header { background: #43A047; color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .report-card { background: white; margin: 15px 20px; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid #FFC107; }
+        .report-card { background: white; margin: 15px 20px; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid #FFC107; transition: 0.3s; }
         .user-info { font-weight: 700; color: #1B5E20; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;}
-        .book-info { font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; color: #333; }
         .summary-box { background: #f9f9f9; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #555; font-style: italic; margin-bottom: 15px; border: 1px dashed #ccc;}
-        .btn-action { width: 48%; border-radius: 20px; padding: 8px; font-size: 0.9rem; font-weight: 600; }
+        
+        .btn-ai-grade {
+            background: linear-gradient(135deg, #66BB6A, #43A047); color: white; border: none;
+            width: 100%; padding: 10px; border-radius: 10px; font-weight: 600; margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-ai-grade:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3); }
+
+        /* Animasi Loading */
+        @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+        .processing { background: #f0f0f0; animation: shimmer 2s infinite linear; pointer-events: none; opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -29,15 +38,21 @@
         </button>
     </div>
 
-    <div id="reportContainer">
-        <div class="text-center p-5 text-muted"><i class="fas fa-spinner fa-spin mb-2"></i><br>Memuat data...</div>
+    <div class="container mt-3">
+        <div class="alert alert-success small border-0 shadow-sm">
+            <i class="fas fa-robot me-2"></i> <strong>AI Auto-Grader Aktif</strong><br>
+            Klik tombol hijau untuk biarkan AI menilai rangkuman & memberi poin sesuai kualitas tulisan.
+        </div>
+        <div id="reportContainer">
+            <div class="text-center p-5 text-muted"><i class="fas fa-spinner fa-spin mb-2"></i><br>Memuat data...</div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, update, increment, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIG SERVER SINGAPURA
+        // CONFIG FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyBRGNL4DL5L_x92vv6tI4Ysa9Q0qyKvjeQ",
             authDomain: "pkm-pm-def08.firebaseapp.com",
@@ -51,86 +66,143 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // LOAD DATA PENDING
+        // --- LINK VERCEL (GANTI DENGAN PUNYAMU) ---
+        const VERCEL_API_URL = "https://gamifikasi-tbm.vercel.app/api/kurasi"; 
+
+        // LOAD DATA
         onValue(ref(db, 'reports'), (snap) => {
             const container = document.getElementById('reportContainer');
             container.innerHTML = '';
 
             if(!snap.exists()) {
-                container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada laporan.</div>';
+                container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada laporan baru.</div>';
                 return;
             }
 
             let pendingCount = 0;
             snap.forEach(child => {
                 const r = child.val();
-                const key = child.key;
-
                 if(r.status === 'pending') {
                     pendingCount++;
-                    // Kita pastikan r.uid ada, jika tidak, kita tidak bisa approve
-                    const uidSafe = r.uid || "ERROR_UID";
                     
+                    // Encode teks agar aman dikirim ke fungsi
+                    const safeSummary = encodeURIComponent(r.summary);
+                    const safeTitle = encodeURIComponent(r.bookTitle);
+
                     container.innerHTML += `
-                        <div class="report-card">
+                        <div class="report-card" id="card-${child.key}">
                             <div class="user-info">
                                 <span><i class="fas fa-user-circle"></i> ${r.userName}</span>
-                                <span class="badge bg-warning text-dark">Baru</span>
+                                <small class="text-muted fw-normal">${r.date}</small>
                             </div>
-                            <div class="text-muted small mb-2">${r.date}</div>
-                            <div class="book-info"><i class="fas fa-book-open text-success me-1"></i> ${r.bookTitle}</div>
+                            <div class="fw-bold text-dark mb-2"><i class="fas fa-book me-1"></i> ${r.bookTitle}</div>
+                            
                             <div class="summary-box">"${r.summary}"</div>
-                            <div class="d-flex justify-content-between">
-                                <button class="btn btn-outline-danger btn-action" onclick="rejectReport('${key}')">Tolak</button>
-                                <button class="btn btn-success btn-action" onclick="approveReport('${key}', '${uidSafe}', 50)">
-                                    Terima (+50)
-                                </button>
+                            
+                            <button class="btn-ai-grade" id="btn-${child.key}" 
+                                onclick="gradeWithAI('${child.key}', '${r.uid}', '${safeSummary}', '${safeTitle}')">
+                                <i class="fas fa-brain"></i> AI: Nilai & Beri Poin Otomatis
+                            </button>
+
+                            <div class="d-flex justify-content-between mt-2">
+                                <button class="btn btn-sm btn-outline-danger w-50 me-1" onclick="manualReject('${child.key}')">Tolak</button>
+                                <button class="btn btn-sm btn-outline-secondary w-50 ms-1" onclick="manualApprove('${child.key}', '${r.uid}')">Manual (+50)</button>
                             </div>
                         </div>
                     `;
                 }
             });
 
-            if(pendingCount === 0) container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada laporan baru.</div>';
+            if(pendingCount === 0) container.innerHTML = '<div class="text-center p-5 text-muted">Semua laporan sudah dinilai.</div>';
         });
 
-        // FUNGSI TERIMA (FIX LOGING)
-        window.approveReport = async (reportKey, userUid, points) => {
-            if(userUid === "ERROR_UID") {
-                Swal.fire('Gagal', 'Data laporan rusak (UID User tidak ada).', 'error');
-                return;
-            }
+        // FUNGSI AI GRADER
+        window.gradeWithAI = async (key, uid, encodedSummary, encodedTitle) => {
+            const btn = document.getElementById(`btn-${key}`);
+            const summary = decodeURIComponent(encodedSummary);
+            
+            // Ubah tampilan jadi loading
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-calculator fa-spin"></i> AI Sedang Menilai...';
+            btn.classList.add('processing');
 
             try {
-                const p = parseInt(points);
-                
-                // 1. Update Status Laporan
-                await update(ref(db, `reports/${reportKey}`), { status: 'approved' });
-
-                // 2. Tambah XP
-                await update(ref(db, `users/${userUid}`), { xp: increment(p) });
-
-                // 3. PUSH LOG (Pastikan path benar)
-                await push(ref(db, `logs/${userUid}`), {
-                    activity: "Laporan Diterima Admin",
-                    points: p,
-                    date: new Date().toLocaleDateString('id-ID'),
-                    timestamp: Date.now()
+                // PANGGIL VERCEL
+                const response = await fetch(VERCEL_API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        text: summary,
+                        type: 'nilai_laporan' // Tipe request khusus penilaian
+                    })
                 });
 
-                const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
-                Toast.fire({icon: 'success', title: 'Laporan Diterima & Log Tercatat!'});
+                const data = await response.json();
+                
+                // Parsing hasil JSON dari AI
+                // AI akan mengembalikan string JSON, kita harus parse jadi Objek JS
+                let aiResult;
+                try {
+                    aiResult = JSON.parse(data.result);
+                } catch (e) {
+                    throw new Error("Format AI Error (Bukan JSON)");
+                }
 
-            } catch(e) {
-                console.error(e);
-                Swal.fire('Error', e.message, 'error');
+                // Logika Penilaian
+                if (aiResult.status === 'rejected' || aiResult.score < 20) {
+                    // KASUS DITOLAK AI (Spam/Asal-asalan)
+                    await update(ref(db, `reports/${key}`), { status: 'rejected', adminNote: aiResult.feedback });
+                    Swal.fire('Ditolak AI', `Alasan: ${aiResult.feedback}`, 'error');
+                } else {
+                    // KASUS DITERIMA AI
+                    const finalScore = aiResult.score; // Skor 10-100 dari AI
+                    
+                    // 1. Update Status & Skor
+                    await update(ref(db, `reports/${key}`), { 
+                        status: 'approved', 
+                        score: finalScore,
+                        aiFeedback: aiResult.feedback
+                    });
+
+                    // 2. Kirim Poin ke User
+                    await update(ref(db, `users/${uid}`), { xp: increment(finalScore) });
+
+                    // 3. Catat Log
+                    await push(ref(db, `logs/${uid}`), {
+                        activity: `Laporan: ${decodeURIComponent(encodedTitle)}`,
+                        points: finalScore,
+                        date: new Date().toLocaleDateString('id-ID'),
+                        timestamp: Date.now()
+                    });
+
+                    Swal.fire({
+                        title: `Nilai: ${finalScore}/100`,
+                        text: `Kata AI: "${aiResult.feedback}"`,
+                        icon: 'success'
+                    });
+                }
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Gagal', 'AI Error: ' + err.message, 'error');
+                btn.innerHTML = originalText;
+                btn.classList.remove('processing');
             }
         };
 
-        window.rejectReport = (key) => {
-            Swal.fire({ title: 'Tolak?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya' }).then(r => {
-                if(r.isConfirmed) update(ref(db, `reports/${key}`), { status: 'rejected' });
-            });
+        // Manual Fallback
+        window.manualReject = (key) => {
+            if(confirm('Tolak laporan ini?')) update(ref(db, `reports/${key}`), { status: 'rejected' });
+        }
+        window.manualApprove = async (key, uid) => {
+            if(confirm('Terima manual dengan nilai standar (50)?')) {
+                await update(ref(db, `reports/${key}`), { status: 'approved', score: 50 });
+                await update(ref(db, `users/${uid}`), { xp: increment(50) });
+                await push(ref(db, `logs/${uid}`), {
+                    activity: "Laporan Diterima (Manual)", points: 50,
+                    date: new Date().toLocaleDateString('id-ID'), timestamp: Date.now()
+                });
+            }
         }
     </script>
 </body>
