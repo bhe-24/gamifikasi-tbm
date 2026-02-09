@@ -34,10 +34,13 @@ export default async function handler(req, res) {
                 1. Panjang & Detail (Semakin lengkap semakin bagus).
                 2. Pemahaman Isi (Tidak melenceng).
                 3. Orisinalitas (Bukan copy-paste mentah).
+                4. Jika kurang dari 2 paragraf akan mendapatkan nilai dibawah 30.
+                5. Dinilai dari kecakapan menjelaskan, bukan bertele-tele.
+                6. Memiliki informasi yang sesuai dan dapat dipertanggungjawabkan
 
                 Berikan output HANYA dalam format JSON seperti ini (Tanpa teks lain):
                 {
-                    "score": (Angka 10-100),
+                    "score": (Angka 10-55),
                     "feedback": "Komentar singkat 1 kalimat untuk siswa",
                     "status": "approved" (atau "rejected" jika isinya asal-asalan/spam)
                 }
