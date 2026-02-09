@@ -25,6 +25,16 @@
         .btn-back { color: white; font-size: 1.2rem; background: none; border: none; cursor: pointer;}
         .page-title { flex-grow: 1; text-align: center; font-weight: 700; font-size: 1.1rem; margin-right: 20px; }
 
+        /* KUOTA BADGE */
+        .quota-container {
+            text-align: center; margin-top: -15px; position: relative; z-index: 101;
+        }
+        .quota-badge {
+            background: white; color: #1565C0; padding: 5px 15px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: inline-block;
+        }
+
         /* FORM CARD */
         .form-card {
             background: white; margin: 20px; padding: 25px; border-radius: 20px;
@@ -44,12 +54,15 @@
             transition: transform 0.2s;
         }
         .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:disabled { background: #B0BEC5; cursor: not-allowed; box-shadow: none; }
 
         .info-box {
             background-color: #FFF3E0; border-left: 4px solid #FFB74D;
             padding: 15px; margin: 20px; border-radius: 8px;
             font-size: 0.85rem; color: #E65100;
         }
+        
+        .validation-error { color: #D32F2F; font-size: 0.75rem; margin-top: 5px; display: none; }
     </style>
 </head>
 <body>
@@ -59,9 +72,15 @@
         <div class="page-title">Lapor Bacaan</div>
     </div>
 
+    <div class="quota-container">
+        <div class="quota-badge" id="quotaBadge">
+            <i class="fas fa-ticket-alt me-1"></i> Sisa Kuota Hari Ini: <span id="quotaCount">...</span>
+        </div>
+    </div>
+
     <div class="info-box">
         <i class="fas fa-info-circle me-2"></i>
-        Isi formulir ini setelah selesai membaca. Kamu akan dapat <strong>+50 XP</strong> setelah admin menyetujui laporanmu!
+        Isi ringkasan dengan detail (Min. 3 Kalimat & 2 Paragraf) untuk mendapatkan <strong>+50 XP</strong>.
     </div>
 
     <div class="form-card">
@@ -73,15 +92,17 @@
 
             <div class="mb-3">
                 <label class="form-label">Tanggal Baca</label>
-                <input type="date" id="tglBaca" class="form-control" required>
+                <input type="date" id="tglBaca" class="form-control" required readonly>
+                <small class="text-muted" style="font-size:0.7rem">*Otomatis tanggal hari ini</small>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Ringkasan Cerita (Min. 3 Kalimat)</label>
-                <textarea id="ringkasan" class="form-control" rows="5" placeholder="Buku ini menceritakan tentang..." required></textarea>
+                <label class="form-label">Ringkasan Cerita</label>
+                <textarea id="ringkasan" class="form-control" rows="8" placeholder="Ceritakan kembali isi bukunya di sini... (Tekan Enter untuk buat paragraf baru)" required></textarea>
+                <div id="textFeedback" class="validation-error"><i class="fas fa-exclamation-circle"></i> Tulisan belum memenuhi syarat (Min. 3 Kalimat, 2 Paragraf).</div>
             </div>
 
-            <button type="submit" class="btn-submit">
+            <button type="submit" class="btn-submit" id="btnKirim">
                 KIRIM LAPORAN <i class="fas fa-paper-plane ms-2"></i>
             </button>
         </form>
@@ -90,7 +111,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, push, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         // CONFIG FIREBASE (SINGAPURA)
         const firebaseConfig = {
@@ -109,62 +130,140 @@
 
         let currentUser = null;
         let userData = {};
+        let dailyCount = 0;
+        const MAX_DAILY = 5;
 
-        // 1. Cek Login
+        // Set Tanggal Hari Ini (Format YYYY-MM-DD)
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('tglBaca').value = today;
+
+        // 1. Cek Login & Load Kuota
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 get(ref(db, 'users/' + user.uid)).then(snap => { userData = snap.val(); });
+                
+                // Cek Kuota Harian
+                checkDailyQuota(user.uid);
             } else {
                 window.location.href = "../index.html";
             }
         });
 
-        // Set Default Tanggal Hari Ini
-        document.getElementById('tglBaca').valueAsDate = new Date();
+        // 2. FUNGSI CEK KUOTA
+        function checkDailyQuota(uid) {
+            const reportsRef = ref(db, 'reports');
+            onValue(reportsRef, (snap) => {
+                let count = 0;
+                if(snap.exists()) {
+                    snap.forEach(c => {
+                        const r = c.val();
+                        // Hitung laporan milik user ini PADA HARI INI
+                        if(r.uid === uid && r.date === today) {
+                            count++;
+                        }
+                    });
+                }
+                dailyCount = count;
+                const sisa = MAX_DAILY - dailyCount;
+                
+                // Update UI Badge
+                document.getElementById('quotaCount').innerText = `${sisa} / ${MAX_DAILY}`;
+                
+                // Matikan Tombol Jika Habis
+                const btn = document.getElementById('btnKirim');
+                if(sisa <= 0) {
+                    btn.disabled = true;
+                    btn.innerText = "KUOTA HARIAN HABIS";
+                    btn.style.backgroundColor = "#B0BEC5";
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Istirahat Dulu!',
+                        text: 'Kamu sudah mengirim 5 laporan hari ini. Kembali lagi besok ya!',
+                        confirmButtonColor: '#1565C0'
+                    });
+                } else {
+                    btn.disabled = false;
+                }
+            });
+        }
 
-        // 2. LOGIC SUBMIT
+        // 3. LOGIC SUBMIT
         document.getElementById('laporForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!currentUser) return;
+            if(dailyCount >= MAX_DAILY) return; // Double check
 
             const judul = document.getElementById('judulBuku').value;
-            const tgl = document.getElementById('tglBaca').value;
             const ringkasan = document.getElementById('ringkasan').value;
 
-            // Validasi Minimal Karakter
-            if(ringkasan.length < 20) {
-                Swal.fire({icon: 'warning', title: 'Terlalu Pendek', text: 'Tulis ringkasan lebih detail ya!', confirmButtonColor: '#1565C0'});
-                return;
-            }
+            // --- VALIDASI KONTEN (MIN 3 KALIMAT & 2 PARAGRAF) ---
+            // Hitung Paragraf (Split by Enter)
+            const paragraphs = ringkasan.trim().split(/\n+/).length;
+            
+            // Hitung Kalimat (Split by titik/tanda tanya/seru)
+            // Filter biar yg kosong gak dihitung
+            const sentences = ringkasan.split(/[.!?]+/).filter(s => s.trim().length > 3).length;
 
-            Swal.fire({title: 'Mengirim...', didOpen: () => Swal.showLoading()});
+            if (paragraphs < 2 || sentences < 3) {
+                document.getElementById('textFeedback').style.display = 'block';
+                document.getElementById('textFeedback').innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i> Tulisanmu masih kurang detail!<br>
+                    <b>Status saat ini:</b> ${paragraphs} Paragraf, ${sentences} Kalimat.<br>
+                    (Minimal butuh 2 Paragraf dan 3 Kalimat).
+                `;
+                Swal.fire({
+                    icon: 'warning', 
+                    title: 'Belum Lengkap', 
+                    text: 'Mohon tulis ringkasan minimal 2 paragraf dan 3 kalimat agar bisa dikirim.',
+                    confirmButtonColor: '#1565C0'
+                });
+                return;
+            } else {
+                document.getElementById('textFeedback').style.display = 'none';
+            }
+            // ----------------------------------------------------
+
+            Swal.fire({title: 'Memproses Laporan...', didOpen: () => Swal.showLoading()});
 
             try {
-                // A. Kirim Data Laporan (Untuk Admin)
+                // A. Kirim Data
                 await push(ref(db, 'reports'), {
                     uid: currentUser.uid,
                     userName: userData.fullName || currentUser.displayName,
                     bookTitle: judul,
-                    date: tgl,
+                    date: today,
                     summary: ringkasan,
                     status: 'pending',
                     timestamp: Date.now()
                 });
 
-                // B. CATAT AKTIVITAS (Supaya Dashboard Muncul Log)
+                // B. Catat Log
                 await push(ref(db, `logs/${currentUser.uid}`), {
                     activity: "Mengirim Laporan Baca",
-                    points: 0, // 0 karena belum di-acc admin
+                    points: 0,
                     date: new Date().toLocaleDateString('id-ID')
                 });
 
+                // C. POP UP SUKSES & INFO KUOTA
+                const sisaBaru = (MAX_DAILY - dailyCount) - 1; // Prediksi sisa
+                
                 Swal.fire({
-                    icon: 'success', title: 'Terkirim!',
-                    text: 'Laporanmu sedang diperiksa Admin. Tunggu poinnya masuk ya!',
+                    icon: 'success', 
+                    title: 'Laporan Diterima!',
+                    html: `
+                        <p class="text-muted">Terima kasih sudah membaca hari ini.</p>
+                        <hr>
+                        <div class="text-start ms-4">
+                            <p class="mb-1">✅ <strong>Status:</strong> Menunggu Verifikasi</p>
+                            <p class="mb-1">🎫 <strong>Sisa Kuota Hari Ini:</strong> ${sisaBaru}</p>
+                            <p class="mb-0">⭐ <strong>Poin:</strong> +50 XP (Setelah disetujui)</p>
+                        </div>
+                    `,
+                    confirmButtonText: 'Oke, Paham',
                     confirmButtonColor: '#1565C0'
                 }).then(() => {
-                    window.location.href = 'index.html'; // Balik ke Dashboard
+                    window.location.href = 'index.html'; 
                 });
 
             } catch (err) {
