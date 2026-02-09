@@ -66,7 +66,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- LINK VERCEL (GANTI DENGAN PUNYAMU) ---
+        // --- LINK VERCEL (PASTIKAN BENAR) ---
         const VERCEL_API_URL = "https://gamifikasi-tbm.vercel.app/api/kurasi"; 
 
         // LOAD DATA
@@ -85,7 +85,6 @@
                 if(r.status === 'pending') {
                     pendingCount++;
                     
-                    // Encode teks agar aman dikirim ke fungsi
                     const safeSummary = encodeURIComponent(r.summary);
                     const safeTitle = encodeURIComponent(r.bookTitle);
 
@@ -101,7 +100,7 @@
                             
                             <button class="btn-ai-grade" id="btn-${child.key}" 
                                 onclick="gradeWithAI('${child.key}', '${r.uid}', '${safeSummary}', '${safeTitle}')">
-                                <i class="fas fa-brain"></i> AI: Nilai & Beri Poin Otomatis
+                                <i class="fas fa-brain"></i> AI: Nilai Otomatis
                             </button>
 
                             <div class="d-flex justify-content-between mt-2">
@@ -116,58 +115,66 @@
             if(pendingCount === 0) container.innerHTML = '<div class="text-center p-5 text-muted">Semua laporan sudah dinilai.</div>';
         });
 
-        // FUNGSI AI GRADER
+        // FUNGSI AI GRADER (SUDAH DIPERBAIKI PARSING JSON-NYA)
         window.gradeWithAI = async (key, uid, encodedSummary, encodedTitle) => {
             const btn = document.getElementById(`btn-${key}`);
             const summary = decodeURIComponent(encodedSummary);
             
-            // Ubah tampilan jadi loading
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-calculator fa-spin"></i> AI Sedang Menilai...';
             btn.classList.add('processing');
 
             try {
-                // PANGGIL VERCEL
                 const response = await fetch(VERCEL_API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
                         text: summary,
-                        type: 'nilai_laporan' // Tipe request khusus penilaian
+                        type: 'nilai_laporan'
                     })
                 });
 
                 const data = await response.json();
                 
-                // Parsing hasil JSON dari AI
-                // AI akan mengembalikan string JSON, kita harus parse jadi Objek JS
+                // --- PERBAIKAN UTAMA DI SINI ---
+                let rawString = data.result;
                 let aiResult;
-                try {
-                    aiResult = JSON.parse(data.result);
-                } catch (e) {
-                    throw new Error("Format AI Error (Bukan JSON)");
-                }
 
-                // Logika Penilaian
+                try {
+                    // 1. Bersihkan backtick (tanda kutip kode)
+                    rawString = rawString.replace(/```json/g, '').replace(/```/g, '');
+                    
+                    // 2. Ambil HANYA bagian dari kurung kurawal pembuka { sampai penutup }
+                    const firstOpen = rawString.indexOf('{');
+                    const lastClose = rawString.lastIndexOf('}');
+                    
+                    if (firstOpen !== -1 && lastClose !== -1) {
+                        rawString = rawString.substring(firstOpen, lastClose + 1);
+                    }
+
+                    // 3. Baru diparsing
+                    aiResult = JSON.parse(rawString);
+
+                } catch (e) {
+                    console.log("Raw Response:", data.result); // Cek console kalau error
+                    throw new Error("AI memberikan format yang aneh. Coba klik lagi.");
+                }
+                // -------------------------------
+
                 if (aiResult.status === 'rejected' || aiResult.score < 20) {
-                    // KASUS DITOLAK AI (Spam/Asal-asalan)
                     await update(ref(db, `reports/${key}`), { status: 'rejected', adminNote: aiResult.feedback });
                     Swal.fire('Ditolak AI', `Alasan: ${aiResult.feedback}`, 'error');
                 } else {
-                    // KASUS DITERIMA AI
-                    const finalScore = aiResult.score; // Skor 10-100 dari AI
+                    const finalScore = aiResult.score;
                     
-                    // 1. Update Status & Skor
                     await update(ref(db, `reports/${key}`), { 
                         status: 'approved', 
                         score: finalScore,
                         aiFeedback: aiResult.feedback
                     });
 
-                    // 2. Kirim Poin ke User
                     await update(ref(db, `users/${uid}`), { xp: increment(finalScore) });
 
-                    // 3. Catat Log
                     await push(ref(db, `logs/${uid}`), {
                         activity: `Laporan: ${decodeURIComponent(encodedTitle)}`,
                         points: finalScore,
@@ -184,13 +191,12 @@
 
             } catch (err) {
                 console.error(err);
-                Swal.fire('Gagal', 'AI Error: ' + err.message, 'error');
+                Swal.fire('Gagal', err.message, 'error');
                 btn.innerHTML = originalText;
                 btn.classList.remove('processing');
             }
         };
 
-        // Manual Fallback
         window.manualReject = (key) => {
             if(confirm('Tolak laporan ini?')) update(ref(db, `reports/${key}`), { status: 'rejected' });
         }
